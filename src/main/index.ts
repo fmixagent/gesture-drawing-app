@@ -52,6 +52,13 @@ app.whenReady().then(() => {
   // IPC test
   ipcMain.on('ping', () => console.log('pong'))
 
+  ipcMain.on('fullscreen', () => {
+    console.log('fullscreen toggled')
+    BrowserWindow.getFocusedWindow()?.setFullScreen(
+      !BrowserWindow.getFocusedWindow()?.isFullScreen()
+    )
+  })
+
   createWindow()
 
   app.on('activate', function () {

@@ -4,6 +4,10 @@ import electronLogo from './assets/electron.svg'
 function App(): React.JSX.Element {
   const ipcHandle = (): void => window.electron.ipcRenderer.send('ping')
 
+  const onIpcFullscreen = (): void => {
+    window.electron.ipcRenderer.send('fullscreen')
+  }
+
   return (
     <>
       <img alt="logo" className="logo" src={electronLogo} />
@@ -24,6 +28,12 @@ function App(): React.JSX.Element {
         <div className="action">
           <a target="_blank" rel="noreferrer" onClick={ipcHandle}>
             Send IPC
+          </a>
+        </div>
+
+        <div className="action">
+          <a target="_blank" rel="noreferrer" onClick={onIpcFullscreen}>
+            Fullscreen
           </a>
         </div>
       </div>
