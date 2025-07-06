@@ -10,9 +10,10 @@ declare global {
   }
 }
 import electronLogo from './assets/electron.svg';
-import { ArrowsFullscreen, FullscreenExit } from 'react-bootstrap-icons';
+import { ArrowsFullscreen, FullscreenExit, GearFill } from 'react-bootstrap-icons';
 import Versions from './components/ui/versions/Versions';
 import PlayerControls from './components/smart/player-controls/PlayerControls';
+import ConfigurationPanel from './components/smart/configuration-panel/ConfigurationPanel';
 // import { BrowserWindow } from 'electron';
 
 function App(): React.JSX.Element {
@@ -42,6 +43,19 @@ function App(): React.JSX.Element {
 
   return (
     <div className="relative flex w-dvw h-dvh bg-blue-500">
+      {/* Bt configuration */}
+      <button
+        type="button"
+        className="absolute z-10 top-2 left-2 flex justify-center items-center w-10 h-10 bg-gray-800 text-gray-200 rounded-md shadow hover:bg-gray-700 cursor-pointer opacity-40 hover:opacity-100 transtion duration-300 ease-in-out"
+        onClick={onIpcFullscreen}
+        title={`${isFullscreen ? 'Exit Fullscreen' : 'Go Fullscreen'}`}
+      >
+        <GearFill className="w-5 h-5" />
+      </button>
+      <div className="absolute top-10 left-2">
+        <ConfigurationPanel />
+      </div>
+      {/* Bt fullscreen */}
       <button
         type="button"
         className="absolute z-10 top-2 right-2 flex justify-center items-center w-10 h-10 bg-gray-800 text-gray-200 rounded-md shadow hover:bg-gray-700 cursor-pointer opacity-40 hover:opacity-100 transtion duration-300 ease-in-out"
