@@ -18,16 +18,16 @@ const PlayerControls: React.FC<PlayerControlsProps> = ({
   onPrevious,
 }) => {
   const [isPLaying, setIsPlaying] = React.useState(false);
-  const handlePlay = () => {
+  const handlePlay = (): void => {
     onPlay?.();
     setIsPlaying(true);
   };
 
-  const handlePause = () => {
+  const handlePause = (): void => {
     onPause?.();
     setIsPlaying(false);
   };
-  const handleStop = () => {
+  const handleStop = (): void => {
     onStop?.();
     setIsPlaying(false);
   };
