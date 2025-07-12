@@ -15,7 +15,7 @@ import Versions from './components/ui/versions/Versions';
 import PlayerControls from './components/smart/player-controls/PlayerControls';
 import ConfigurationPanel from './components/smart/configuration-panel/ConfigurationPanel';
 import { Configuration, TIME_STRETCHS } from './models/configurtion';
-import { time } from 'console';
+import Timer from './components/smart/timer/Timer';
 // import { BrowserWindow } from 'electron';
 
 function App(): React.JSX.Element {
@@ -53,6 +53,28 @@ function App(): React.JSX.Element {
   };
   const onChangeConfiguration = (newConfiguration: Configuration): void => {
     setConfiguration(newConfiguration);
+    onStopTimer(); // Reset timer when configuration changes
+    setTimerTime(newConfiguration.timeStretchSelected.duration);
+  };
+
+  // Timer
+  const [isTimerVisible, setIsTimerVisible] = React.useState<boolean>(true);
+  const [isTimerPlaying, setIsTimerPlaying] = React.useState<boolean>(false);
+  const [timerTime, setTimerTime] = React.useState<number>(
+    configuration.timeStretchSelected.duration
+  );
+  const onPlayTImer = (): void => {
+    console.log('Playing timer');
+    setIsTimerPlaying(true);
+  };
+  const onPauseTimer = (): void => {
+    console.log('Pausing timer');
+    setIsTimerPlaying(false);
+  };
+  const onStopTimer = (): void => {
+    console.log('Stopping timer');
+    setIsTimerPlaying(false);
+    setTimerTime(configuration.timeStretchSelected.duration);
   };
 
   return (
@@ -88,6 +110,17 @@ function App(): React.JSX.Element {
           <ArrowsFullscreen className="w-5 h-5" />
         )}
       </button>
+      {/* Timer */}
+      <div
+        className={`absolute bottom-18 right-2 ${isTimerVisible ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'} transition-opacity duration-300 ease-in-out`}
+      >
+        <Timer
+          isPlaying={isTimerPlaying}
+          inititalTime={timerTime}
+          totalTime={configuration.timeStretchSelected.duration}
+        />
+      </div>
+
       {/* Image container */}
       <div className="flex w-full h-full object-contain">
         <img alt="logo" className="w-full h-full object-contain" src={electronLogo} />
@@ -96,7 +129,7 @@ function App(): React.JSX.Element {
 
       {/* Footer */}
       <div className="absolute flex justify-center items-center  w-full bottom-0 bg-gray-900/20 z-10 py-3 ">
-        <PlayerControls />
+        <PlayerControls onPlay={onPlayTImer} onPause={onPauseTimer} onStop={onStopTimer} />
       </div>
     </div>
   );
