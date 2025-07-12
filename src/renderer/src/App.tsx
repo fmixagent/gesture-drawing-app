@@ -16,6 +16,7 @@ import PlayerControls from './components/smart/player-controls/PlayerControls';
 import ConfigurationPanel from './components/smart/configuration-panel/ConfigurationPanel';
 import { Configuration, TIME_STRETCHS } from './models/configurtion';
 import Timer from './components/smart/timer/Timer';
+import CircularProgressBar from './components/ui/circular-progress-bar/CircularProgressBar';
 // import { BrowserWindow } from 'electron';
 
 function App(): React.JSX.Element {
@@ -112,13 +113,15 @@ function App(): React.JSX.Element {
       </button>
       {/* Timer */}
       <div
-        className={`absolute bottom-18 right-2 ${isTimerVisible ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'} transition-opacity duration-300 ease-in-out`}
+        className={`absolute bg-gray-950 w-40 h-40 bottom-18 right-2 ${isTimerVisible ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'} transition-opacity duration-300 ease-in-out`}
       >
-        <Timer
-          isPlaying={isTimerPlaying}
-          inititalTime={timerTime}
-          totalTime={configuration.timeStretchSelected.duration}
-        />
+        <div className="absolute w-full h-full">
+          <Timer
+            isPlaying={isTimerPlaying}
+            inititalTime={timerTime}
+            totalTime={configuration.timeStretchSelected.duration}
+          />
+        </div>
       </div>
 
       {/* Image container */}

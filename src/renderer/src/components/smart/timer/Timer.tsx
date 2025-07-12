@@ -1,3 +1,4 @@
+import CircularProgressBar from '@renderer/components/ui/circular-progress-bar/CircularProgressBar';
 import CounterDisplay from '@renderer/components/ui/counter-display/CounterDisplay';
 import React, { useEffect } from 'react';
 
@@ -38,11 +39,14 @@ const Timer: React.FC<TimerProps> = ({ inititalTime = 0, totalTime = 60, isPlayi
   }, [inititalTime]);
 
   return (
-    <div className="w-40 h-40 rounded-md bg-gray-950">
+    <div className="relative w-40 h-40 rounded-md">
       <div
         className={`w-full h-full ${isPlaying ? 'opacity-100' : 'opacity-50'} transition-all ease-in-out duration-500`}
       >
         <CounterDisplay time={countdownTime} totalTime={totalTime} />
+        <div className="absolute inset-0 flex justify-center items-center p-3">
+          <CircularProgressBar percentage={(totalTime - countdownTime / totalTime) * 100} />
+        </div>
       </div>
     </div>
   );
