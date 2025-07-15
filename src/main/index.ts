@@ -1,7 +1,9 @@
-import { app, shell, BrowserWindow, ipcMain } from 'electron';
-import { join } from 'path';
+import { app, shell, BrowserWindow, ipcMain, dialog, net } from 'electron';
+import path, { join } from 'path';
 import { electronApp, optimizer, is } from '@electron-toolkit/utils';
 import icon from '../../resources/icon.png?asset';
+import { protocol } from 'electron/main';
+import url from 'url';
 
 function createWindow(): void {
   // Create the browser window.
@@ -45,10 +47,22 @@ function createWindow(): void {
   }
 }
 
+protocol.registerSchemesAsPrivileged([{ scheme: 'atom', privileges: { bypassCSP: true } }]);
+
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
 app.whenReady().then(() => {
+  protocol.handle('atom', (request) => {
+    console.log('Handling atom protocol request:', request.url);
+    const filePath = request.url.slice('atom:'.length);
+    console.log('File path:', filePath);
+    // const filePathClean = url.pathToFileURL(path.join(__dirname, filePath)).toString();
+    const filePathClean = url.pathToFileURL(filePath).toString();
+    console.log('Path file clean:', filePathClean);
+    return net.fetch(filePathClean);
+  });
+
   // Set app user model id for windows
   electronApp.setAppUserModelId('com.electron');
 
@@ -68,6 +82,13 @@ app.whenReady().then(() => {
 
   ipcMain.on('exitfullscreen', () => {
     BrowserWindow.getFocusedWindow()?.setFullScreen(false);
+  });
+
+  ipcMain.handle('selectDirectory', async () => {
+    const result = await dialog.showOpenDialog({
+      properties: ['openDirectory'],
+    });
+    return result.filePaths.length > 0 ? result.filePaths[0] : null;
   });
 
   createWindow();

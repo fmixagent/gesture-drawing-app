@@ -6,6 +6,9 @@ declare global {
     api: {
       onEnterFullscreen: (callback: () => void) => void;
       onLeaveFullscreen: (callback: () => void) => void;
+      selectDirectory: () => Promise<string | null>;
+      readDirFileNames: (path: string) => Promise<string[]>;
+      isDirectory: (path: string) => boolean;
     };
   }
 }
@@ -16,7 +19,7 @@ import PlayerControls from './components/smart/player-controls/PlayerControls';
 import ConfigurationPanel from './components/smart/configuration-panel/ConfigurationPanel';
 import { Configuration, TIME_STRETCHS } from './models/configurtion';
 import Timer from './components/smart/timer/Timer';
-import CircularProgressBar from './components/ui/circular-progress-bar/CircularProgressBar';
+import FolderExplorer from './components/smart/folder-explorer/FolderExplorer';
 // import { BrowserWindow } from 'electron';
 
 function App(): React.JSX.Element {
@@ -78,8 +81,16 @@ function App(): React.JSX.Element {
     setTimerTime(configuration.timeStretchSelected.duration);
   };
 
+  const [srcImage, setSrcImage] = React.useState<string>();
+  const onImageSelected = (imagePath: string): void => {
+    const fileUrl = 'atom:' + imagePath;
+    console.log('File url:', fileUrl);
+    setSrcImage(fileUrl);
+  };
+
   return (
-    <div className="relative flex w-dvw h-dvh bg-blue-500">
+    <div className="relative flex w-dvw h-dvh bg-gray-800">
+      <FolderExplorer onFileSelected={onImageSelected} />
       {/* Bt configuration */}
       <button
         type="button"
@@ -126,7 +137,7 @@ function App(): React.JSX.Element {
 
       {/* Image container */}
       <div className="flex w-full h-full object-contain">
-        <img alt="logo" className="w-full h-full object-contain" src={electronLogo} />
+        <img alt="logo" className="w-full h-full object-contain" src={srcImage ?? electronLogo} />
       </div>
       <Versions></Versions>
 
