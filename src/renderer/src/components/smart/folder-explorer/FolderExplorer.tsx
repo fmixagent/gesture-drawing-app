@@ -39,10 +39,10 @@ const FolderExplorer: React.FC<FolderExplorerProps> = ({ onFileSelected }) => {
   };
 
   return (
-    <div className="absolute top-3 left-50 z-10">
+    <div>
       <button
         type="button"
-        className="flex items-center justify-center bg-gray-900 text-gray-200 p-2 rounded-md"
+        className="cursor-pointer flex items-center justify-center bg-gray-900 text-gray-200 p-2 rounded-md"
         onClick={() => folderOnChange()}
       >
         <Folder2 className="w-5 h-5 text-gray-500 dark:text-gray-300" />

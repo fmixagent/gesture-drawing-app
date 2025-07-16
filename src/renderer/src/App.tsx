@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 
 // Add a type definition for window.api to avoid 'unknown' type errors
 declare global {
@@ -12,14 +12,13 @@ declare global {
     };
   }
 }
-import electronLogo from './assets/electron.svg';
 import { ArrowsFullscreen, FullscreenExit, GearFill } from 'react-bootstrap-icons';
 import Versions from './components/ui/versions/Versions';
 import PlayerControls from './components/smart/player-controls/PlayerControls';
 import ConfigurationPanel from './components/smart/configuration-panel/ConfigurationPanel';
 import { Configuration, TIME_STRETCHS } from './models/configurtion';
 import Timer from './components/smart/timer/Timer';
-import FolderExplorer from './components/smart/folder-explorer/FolderExplorer';
+import fsService from './service/fs-service';
 // import { BrowserWindow } from 'electron';
 
 function App(): React.JSX.Element {
@@ -69,6 +68,7 @@ function App(): React.JSX.Element {
   );
   const onPlayTImer = (): void => {
     console.log('Playing timer');
+    showRandomImageFromFolder();
     setIsTimerPlaying(true);
   };
   const onPauseTimer = (): void => {
@@ -82,15 +82,47 @@ function App(): React.JSX.Element {
   };
 
   const [srcImage, setSrcImage] = React.useState<string>();
-  const onImageSelected = (imagePath: string): void => {
+  const [imagePaths, setImagePaths] = React.useState<string[]>([]);
+  useEffect(() => {
+    const fetchImages = async (): Promise<void> => {
+      if (!configuration.selectedFolder) {
+        console.log('No folder selected, skipping image fetch');
+        return;
+      }
+      const imagePaths = await fsService.getFilesFromDir(configuration.selectedFolder);
+      setImagePaths(imagePaths);
+    };
+    fetchImages();
+
+    return () => {
+      setImagePaths([]);
+    };
+  }, [configuration.selectedFolder]);
+
+  const showRandomImageFromFolder = (): void => {
+    const imagePath = getRandomImageFromFolder();
+    if (!imagePath) {
+      console.log('No images available in the selected folder');
+      setSrcImage(undefined); // Fallback to default logo
+      return;
+    }
+    console.log('Showing random image from folder: ', imagePath);
+
     const fileUrl = 'atom:' + imagePath;
-    console.log('File url:', fileUrl);
     setSrcImage(fileUrl);
+  };
+
+  const getRandomImageFromFolder = (): string | undefined => {
+    if (imagePaths.length === 0) {
+      return undefined; // Fallback to default logo if no images are available
+    }
+    const randomIndex = Math.floor(Math.random() * imagePaths.length);
+    const imagePath = imagePaths[randomIndex];
+    return imagePath;
   };
 
   return (
     <div className="relative flex w-dvw h-dvh bg-gray-800">
-      <FolderExplorer onFileSelected={onImageSelected} />
       {/* Bt configuration */}
       <button
         type="button"
@@ -136,9 +168,24 @@ function App(): React.JSX.Element {
       </div>
 
       {/* Image container */}
-      <div className="flex w-full h-full object-contain">
-        <img alt="logo" className="w-full h-full object-contain" src={srcImage ?? electronLogo} />
-      </div>
+      {srcImage ? (
+        <div className="flex w-full h-full object-contain">
+          <img alt="logo" className="w-full h-full object-contain" src={srcImage} />
+        </div>
+      ) : (
+        <div className="flex w-full h-full justify-center items-center text-gray-500">
+          {!configuration.selectedFolder ? (
+            <span>
+              In the configuration panel select a folder with images to pick from there a random
+              one.
+            </span>
+          ) : imagePaths.length === 0 ? (
+            <span>The folder selected doesn&apos;t contain any image</span>
+          ) : (
+            <span>{imagePaths.length} photos</span>
+          )}
+        </div>
+      )}
       <Versions></Versions>
 
       {/* Footer */}
