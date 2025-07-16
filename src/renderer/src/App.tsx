@@ -68,7 +68,6 @@ function App(): React.JSX.Element {
   );
   const onPlayTImer = (): void => {
     console.log('Playing timer');
-    showRandomImageFromFolder();
     setIsTimerPlaying(true);
   };
   const onPauseTimer = (): void => {
@@ -98,6 +97,10 @@ function App(): React.JSX.Element {
       setImagePaths([]);
     };
   }, [configuration.selectedFolder]);
+
+  useEffect(() => {
+    setSrcImage(undefined); // Reset image source when configuration changes
+  }, [configuration.timeStretchSelected]);
 
   const showRandomImageFromFolder = (): void => {
     const imagePath = getRandomImageFromFolder();
@@ -156,13 +159,14 @@ function App(): React.JSX.Element {
       </button>
       {/* Timer */}
       <div
-        className={`absolute bg-gray-950 w-40 h-40 bottom-18 right-2 ${isTimerVisible ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'} transition-opacity duration-300 ease-in-out`}
+        className={`absolute  w-40 h-40 bottom-18 right-2 ${isTimerVisible ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'} transition-opacity duration-300 ease-in-out`}
       >
         <div className="absolute w-full h-full">
           <Timer
             isPlaying={isTimerPlaying}
             inititalTime={timerTime}
             totalTime={configuration.timeStretchSelected.duration}
+            onStartedTimer={showRandomImageFromFolder}
           />
         </div>
       </div>
