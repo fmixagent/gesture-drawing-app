@@ -6,37 +6,53 @@ interface TimerProps {
   inititalTime?: number; // seconds
   totalTime?: number; // seconds
   isPlaying?: boolean;
+  onStartedTimer?: () => void; // Callback when timer ends
 }
 
-const Timer: React.FC<TimerProps> = ({ inititalTime = 0, totalTime = 60, isPlaying = false }) => {
+const Timer: React.FC<TimerProps> = ({
+  inititalTime = 0,
+  totalTime = 60,
+  isPlaying = false,
+  onStartedTimer,
+}) => {
   const [countdownTime, setCountdownTime] = React.useState<number>(inititalTime);
-
   const [timeInterval, setTimeInterval] = React.useState<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    setCountdownTime(inititalTime);
+  }, [inititalTime]);
+
+  const decrementTime = (): void => {
+    setCountdownTime((prev) => {
+      console.log('Current countdown time:', prev, Date.now());
+      if (prev === inititalTime) onStartedTimer?.();
+      if (prev <= 0) {
+        return inititalTime; // Reset to initial time if it goes below 0
+      }
+      return prev - 1;
+    });
+  };
 
   useEffect(() => {
     if (isPlaying) {
       // Start timer
       if (timeInterval) clearInterval(timeInterval);
-      const interval = setInterval(() => {
-        setCountdownTime((prev) => {
-          const nextTime = prev - 1;
-          if (nextTime === 0) {
-            clearInterval(interval);
-          }
-          return nextTime;
-        });
-      }, 1000);
-      setTimeInterval(interval);
+      setTimeInterval(
+        setInterval(() => {
+          decrementTime();
+        }, 1000)
+      );
     } else {
       // Stop timer
       if (timeInterval) clearInterval(timeInterval);
       setTimeInterval(null);
     }
-  }, [isPlaying]);
 
-  useEffect(() => {
-    setCountdownTime(inititalTime);
-  }, [inititalTime]);
+    return () => {
+      if (timeInterval) clearInterval(timeInterval);
+      setTimeInterval(null);
+    };
+  }, [isPlaying]);
 
   return (
     <div className="relative w-40 h-40 rounded-md">
