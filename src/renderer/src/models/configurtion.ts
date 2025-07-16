@@ -12,4 +12,5 @@ export const TIME_STRETCHS: TimeStretch[] = [
 
 export class Configuration {
   timeStretchSelected!: TimeStretch;
+  selectedFolder?: string; // Optional, can be undefined if not set
 }
