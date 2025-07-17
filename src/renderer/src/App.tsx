@@ -16,7 +16,7 @@ import { ArrowsFullscreen, FullscreenExit, GearFill } from 'react-bootstrap-icon
 import Versions from './components/ui/versions/Versions';
 import PlayerControls from './components/smart/player-controls/PlayerControls';
 import ConfigurationPanel from './components/smart/configuration-panel/ConfigurationPanel';
-import { Configuration, TIME_STRETCHS } from './models/configurtion';
+import { Configuration, TIME_STRETCHS } from './models/configuration';
 import Timer from './components/smart/timer/Timer';
 import fsService from './service/fs-service';
 // import { BrowserWindow } from 'electron';
@@ -189,7 +189,6 @@ function App(): React.JSX.Element {
           )}
         </div>
       )}
-      <Versions></Versions>
 
       {/* Footer */}
       <div className="absolute flex justify-center items-center  w-full bottom-0 bg-gray-900/20 z-10 py-3 ">
