@@ -1,6 +1,5 @@
 import { Configuration, TimeStretch } from '@renderer/models/configurtion';
 import React from 'react';
-import FolderExplorer from '../folder-explorer/FolderExplorer';
 import FolderSelector from '../folder-selector/FolderSelector';
 
 interface ConfigurationPanelProps {

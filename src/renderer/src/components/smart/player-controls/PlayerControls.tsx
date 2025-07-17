@@ -1,4 +1,4 @@
-import FullRoundButton from '@renderer/components/ui/full-round-button/FullROundButton';
+import FullRoundButton from '@renderer/components/ui/full-round-button/FullRoundButton';
 import React from 'react';
 import { PauseFill, PlayFill, SkipEndFill, SkipStartFill, StopFill } from 'react-bootstrap-icons';
 

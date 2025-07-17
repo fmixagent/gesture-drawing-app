@@ -61,7 +61,6 @@ function App(): React.JSX.Element {
   };
 
   // Timer
-  const [isTimerVisible, setIsTimerVisible] = React.useState<boolean>(true);
   const [isTimerPlaying, setIsTimerPlaying] = React.useState<boolean>(false);
   const [timerTime, setTimerTime] = React.useState<number>(
     configuration.timeStretchSelected.duration
@@ -159,7 +158,7 @@ function App(): React.JSX.Element {
       </button>
       {/* Timer */}
       <div
-        className={`absolute  w-40 h-40 bottom-18 right-2 ${isTimerVisible ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'} transition-opacity duration-300 ease-in-out`}
+        className={`absolute  w-40 h-40 bottom-18 right-2  pointer-events-none transition-opacity duration-300 ease-in-out`}
       >
         <div className="absolute w-full h-full">
           <Timer
