@@ -3,6 +3,7 @@ import React from 'react';
 import { PauseFill, PlayFill, SkipEndFill, SkipStartFill, StopFill } from 'react-bootstrap-icons';
 
 interface PlayerControlsProps {
+  isActive?: boolean;
   onPlay?: () => void;
   onPause?: () => void;
   onStop?: () => void;
@@ -11,31 +12,28 @@ interface PlayerControlsProps {
 }
 
 const PlayerControls: React.FC<PlayerControlsProps> = ({
+  isActive = false,
   onPlay,
   onPause,
   onStop,
   onNext,
   onPrevious,
 }) => {
-  const [isPLaying, setIsPlaying] = React.useState(false);
   const handlePlay = (): void => {
     onPlay?.();
-    setIsPlaying(true);
   };
 
   const handlePause = (): void => {
     onPause?.();
-    setIsPlaying(false);
   };
   const handleStop = (): void => {
     onStop?.();
-    setIsPlaying(false);
   };
 
   return (
     <div className="flex flex-row items-enter gap-2">
       <FullRoundButton icon={<SkipStartFill className="relative" />} onClick={onPrevious} />
-      {!isPLaying ? (
+      {!isActive ? (
         <FullRoundButton
           icon={<PlayFill className="relative left-[0.05em]" />}
           onClick={handlePlay}
