@@ -1,6 +1,8 @@
-import { Configuration, TimeStretch } from '@renderer/models/configurtion';
 import React from 'react';
 import FolderSelector from '../folder-selector/FolderSelector';
+import ListSelector, { ListItem } from '../list-selector/list-selector';
+import { PRELOADED_SESSIONs, Session } from '@renderer/models/session';
+import { Configuration, TimeStretch } from '@renderer/models/configuration';
 
 interface ConfigurationPanelProps {
   configuration: Configuration;
@@ -33,6 +35,12 @@ const ConfigurationPanel: React.FC<ConfigurationPanelProps> = ({
     onChange?.(newConfiguration);
   };
 
+  const sessionItems: ListItem<Session>[] = PRELOADED_SESSIONs.map((session) => ({
+    id: session.sequenceName || 'session-' + session.totalDuration,
+    name: session.sequenceName || `Session (${session.totalDuration} seconds)`,
+    value: session,
+  }));
+
   return (
     <div className="flex w-[10rem] h-full flex-col gap-10 items-enter bg-black/50  p-3 rounded-md">
       <section>
@@ -53,6 +61,8 @@ const ConfigurationPanel: React.FC<ConfigurationPanelProps> = ({
               {timeStretch.label}
             </button>
           ))}
+          <h2 className="color-white text-gray-100 mt-3 pb-2 mb-3 font-normal">or use a session</h2>
+          <ListSelector items={sessionItems} />
         </main>
       </section>
       <section>

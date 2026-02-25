@@ -13,15 +13,32 @@ declare global {
   }
 }
 import { ArrowsFullscreen, FullscreenExit, GearFill } from 'react-bootstrap-icons';
-import Versions from './components/ui/versions/Versions';
 import PlayerControls from './components/smart/player-controls/PlayerControls';
 import ConfigurationPanel from './components/smart/configuration-panel/ConfigurationPanel';
-import { Configuration, TIME_STRETCHS } from './models/configurtion';
-import Timer from './components/smart/timer/Timer';
+import { Configuration, TIME_STRETCHS } from './models/configuration';
 import fsService from './service/fs-service';
+import CounterDisplay from './components/ui/counter-display/CounterDisplay';
+import useCountdownTimer from './hooks/use-countdown-counter';
+import CircularProgressBar from './components/ui/circular-progress-bar/CircularProgressBar';
 // import { BrowserWindow } from 'electron';
 
 function App(): React.JSX.Element {
+  const onTimerStart = (): void => {
+    console.log('Timer started');
+    showNewRandomImageFromFolder();
+  };
+
+  const {
+    timer,
+    isActive: isCounterActive,
+    countdownTime,
+    setIsInfiniteLoop,
+    startTimer,
+    pauseTimer,
+    stopTimer,
+    resetTimer,
+  } = useCountdownTimer(onTimerStart);
+
   // Listen for fullscreen events via Electron IPC if needed
   React.useEffect(() => {
     window.api.onEnterFullscreen(() => {
@@ -56,29 +73,22 @@ function App(): React.JSX.Element {
   };
   const onChangeConfiguration = (newConfiguration: Configuration): void => {
     setConfiguration(newConfiguration);
-    onStopTimer(); // Reset timer when configuration changes
-    setTimerTime(newConfiguration.timeStretchSelected.duration);
+    stopTimer();
   };
 
-  // Timer
-  const [isTimerPlaying, setIsTimerPlaying] = React.useState<boolean>(false);
-  const [timerTime, setTimerTime] = React.useState<number>(
-    configuration.timeStretchSelected.duration
-  );
+  // Player controls management
   const onPlayTImer = (): void => {
-    console.log('Playing timer');
-    setIsTimerPlaying(true);
+    startTimer();
   };
   const onPauseTimer = (): void => {
-    console.log('Pausing timer');
-    setIsTimerPlaying(false);
+    pauseTimer();
   };
   const onStopTimer = (): void => {
-    console.log('Stopping timer');
-    setIsTimerPlaying(false);
-    setTimerTime(configuration.timeStretchSelected.duration);
+    setSrcImage(undefined);
+    stopTimer();
   };
 
+  // Image management
   const [srcImage, setSrcImage] = React.useState<string>();
   const [imagePaths, setImagePaths] = React.useState<string[]>([]);
   useEffect(() => {
@@ -98,21 +108,30 @@ function App(): React.JSX.Element {
   }, [configuration.selectedFolder]);
 
   useEffect(() => {
+    resetTimer(configuration.timeStretchSelected.duration);
+    setIsInfiniteLoop(true); // Set infinite loop to true by default
     setSrcImage(undefined); // Reset image source when configuration changes
   }, [configuration.timeStretchSelected]);
 
-  const showRandomImageFromFolder = (): void => {
+  const [imagesShown, setImagesShown] = React.useState<string[]>([]);
+  const [imageShoiwnIndex, setImageShownIndex] = React.useState<number>(-1); // Start with -1 to indicate no image shown yet
+  const showNewRandomImageFromFolder = (): void => {
     const imagePath = getRandomImageFromFolder();
     if (!imagePath) {
       console.log('No images available in the selected folder');
       setSrcImage(undefined); // Fallback to default logo
       return;
     }
-    console.log('Showing random image from folder: ', imagePath);
+    showImage(imagePath);
+    setImagesShown((prev) => [...prev, imagePath]);
+    setImageShownIndex((prev) => prev + 1);
 
+  };
+
+  const showImage = (imagePath: string): void => {
     const fileUrl = 'atom:' + imagePath;
     setSrcImage(fileUrl);
-  };
+  }
 
   const getRandomImageFromFolder = (): string | undefined => {
     if (imagePaths.length === 0) {
@@ -122,6 +141,31 @@ function App(): React.JSX.Element {
     const imagePath = imagePaths[randomIndex];
     return imagePath;
   };
+
+  const onNext = (): void => {
+    if(imageShoiwnIndex >= imagesShown.length - 1) {
+      console.log('No next image available, showing a random one');
+      showNewRandomImageFromFolder();
+      return;
+    }
+
+    const newIndex = imageShoiwnIndex + 1;
+    setImageShownIndex(newIndex);
+    const nextImage = imagesShown[newIndex];
+    showImage(nextImage); // Show the next image;
+  }
+
+  const onPrevious = (): void => {
+    if(imageShoiwnIndex <= 0) {
+      console.log('No previous image available');
+      return;
+    }
+
+    const newIndex = imageShoiwnIndex - 1;
+    setImageShownIndex(newIndex);
+    const previousImage = imagesShown[newIndex];
+    showImage(previousImage); // Show the previous image
+  }
 
   return (
     <div className="relative flex w-dvw h-dvh bg-gray-800">
@@ -161,12 +205,16 @@ function App(): React.JSX.Element {
         className={`absolute  w-40 h-40 bottom-18 right-2  pointer-events-none transition-opacity duration-300 ease-in-out`}
       >
         <div className="absolute w-full h-full">
-          <Timer
-            isPlaying={isTimerPlaying}
-            inititalTime={timerTime}
-            totalTime={configuration.timeStretchSelected.duration}
-            onStartedTimer={showRandomImageFromFolder}
-          />
+          <div className="relative w-40 h-40 rounded-md">
+            <div
+              className={`w-full h-full ${isCounterActive ? 'opacity-100' : 'opacity-50'} transition-all ease-in-out duration-500`}
+            >
+              <CounterDisplay time={timer} totalTime={countdownTime} />
+              <div className="absolute inset-0 flex justify-center items-center p-3">
+                <CircularProgressBar percentage={(countdownTime - timer / countdownTime) * 100} />
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -189,11 +237,17 @@ function App(): React.JSX.Element {
           )}
         </div>
       )}
-      <Versions></Versions>
 
       {/* Footer */}
       <div className="absolute flex justify-center items-center  w-full bottom-0 bg-gray-900/20 z-10 py-3 ">
-        <PlayerControls onPlay={onPlayTImer} onPause={onPauseTimer} onStop={onStopTimer} />
+        <PlayerControls
+          isActive={isCounterActive}
+          onPlay={onPlayTImer}
+          onPause={onPauseTimer}
+          onStop={onStopTimer}
+          onNext={onNext}
+          onPrevious={onPrevious}
+        />
       </div>
     </div>
   );
