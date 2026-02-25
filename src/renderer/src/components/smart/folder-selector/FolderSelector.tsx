@@ -4,10 +4,11 @@ import React from 'react';
 import { Folder2 } from 'react-bootstrap-icons';
 
 interface FolderSelectorProps {
+  selectedFolder?: string;
   onFolderSelected?: (folderPath: string) => void;
 }
-const FolderSelector: React.FC<FolderSelectorProps> = ({ onFolderSelected }) => {
-  const [folderSelected, setFolderSelected] = React.useState<string | null>(null);
+const FolderSelector: React.FC<FolderSelectorProps> = ({ selectedFolder, onFolderSelected }) => {
+  const [folderSelected, setFolderSelected] = React.useState<string | null>(selectedFolder || null);
   const folderOnChange = async (): Promise<void> => {
     const folderPath = await fsService.selectFolder();
     if (!folderPath) {
@@ -20,6 +21,7 @@ const FolderSelector: React.FC<FolderSelectorProps> = ({ onFolderSelected }) => 
 
   return (
     <div className="flex flex-col gap-3">
+      <h1 className='text-white text-xs'>{selectedFolder}</h1>
       <button
         type="button"
         className="cursor-pointer flex items-center justify-center bg-gray-900 text-gray-200 p-2 rounded-md"

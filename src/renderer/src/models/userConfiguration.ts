@@ -11,7 +11,7 @@ export const TIME_STRETCHS: TimeStretch[] = [
   { id: '4', label: '10 min', duration: 600 },
 ];
 
-export class Configuration {
-  timeStretchSelected!: TimeStretch;
-  selectedFolder?: string; // Optional, can be undefined if not set
+export class UserConfiguration {
+  timeStretchSelected: TimeStretch = TIME_STRETCHS[0];
+  selectedFolder: string = ''; // Optional, can be undefined if not set
 }

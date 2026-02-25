@@ -2,24 +2,24 @@ import React from 'react';
 import FolderSelector from '../folder-selector/FolderSelector';
 import ListSelector, { ListItem } from '../list-selector/list-selector';
 import { PRELOADED_SESSIONs, Session } from '@renderer/models/session';
-import { Configuration, TimeStretch } from '@renderer/models/configuration';
+import { TimeStretch, UserConfiguration } from '@renderer/models/userConfiguration';
 
 interface ConfigurationPanelProps {
-  configuration: Configuration;
+  userConfiguration: UserConfiguration;
   timeStrechs: TimeStretch[];
-  onChange?: (configuration: Configuration) => void;
+  onChange?: (userConfiguration: UserConfiguration) => void;
 }
 
 const ConfigurationPanel: React.FC<ConfigurationPanelProps> = ({
-  configuration,
+  userConfiguration,
   timeStrechs,
   onChange,
 }) => {
   const onChangeTimeStretch = (timeStretchId: string): void => {
     const findTimeStretch = timeStrechs.find((ts) => ts.id === timeStretchId);
     if (!findTimeStretch) return;
-    const newConfiguration: Configuration = {
-      ...configuration,
+    const newConfiguration: UserConfiguration = {
+      ...userConfiguration,
       timeStretchSelected: findTimeStretch,
     };
     onChange?.(newConfiguration);
@@ -27,9 +27,9 @@ const ConfigurationPanel: React.FC<ConfigurationPanelProps> = ({
 
   const onFolderSelected = (folderPath: string): void => {
     console.log('Selected folder:', folderPath);
-    // Here you can handle the folder selection, e.g., save it to the configuration
-    const newConfiguration: Configuration = {
-      ...configuration,
+    // Here you can handle the folder selection, e.g., save it to the userConfiguration
+    const newConfiguration: UserConfiguration = {
+      ...userConfiguration,
       selectedFolder: folderPath,
     };
     onChange?.(newConfiguration);
@@ -52,7 +52,7 @@ const ConfigurationPanel: React.FC<ConfigurationPanelProps> = ({
             <button
               key={timeStretch.id}
               className={`flex-1 rounded-md border border-transparent px-4 py-5 text-sm font-medium shadow-sm transition-colors duration-200 ease-in-out ${
-                configuration?.timeStretchSelected?.id === timeStretch.id
+                userConfiguration?.timeStretchSelected?.id === timeStretch.id
                   ? 'bg-gray-300 text-gray-900 '
                   : 'cursor-pointer bg-gray-900 text-gray-300 hover:bg-gray-100 hover:text-gray-900'
               }`}
@@ -70,7 +70,7 @@ const ConfigurationPanel: React.FC<ConfigurationPanelProps> = ({
           Folder selected
         </h1>
         <main className="flex flex-col gap-3">
-          <FolderSelector onFolderSelected={onFolderSelected} />
+          <FolderSelector selectedFolder={userConfiguration?.selectedFolder} onFolderSelected={onFolderSelected} />
         </main>
       </section>
     </div>

@@ -9,17 +9,21 @@ declare global {
       selectDirectory: () => Promise<string | null>;
       readDirFileNames: (path: string) => Promise<string[]>;
       isDirectory: (path: string) => boolean;
+      setStoreValue: (key: string, value: string) => Promise<void>;
+      getStoreValue: (key: string) => Promise<string>;
+      deleteStoreValue: (key: string) => Promise<void>;
     };
   }
 }
 import { ArrowsFullscreen, FullscreenExit, GearFill } from 'react-bootstrap-icons';
 import PlayerControls from './components/smart/player-controls/PlayerControls';
-import ConfigurationPanel from './components/smart/configuration-panel/ConfigurationPanel';
-import { Configuration, TIME_STRETCHS } from './models/configuration';
 import fsService from './service/fs-service';
 import CounterDisplay from './components/ui/counter-display/CounterDisplay';
 import useCountdownTimer from './hooks/use-countdown-counter';
 import CircularProgressBar from './components/ui/circular-progress-bar/CircularProgressBar';
+import { TIME_STRETCHS, UserConfiguration } from './models/userConfiguration';
+import storeService from './service/store-service';
+import ConfigurationPanel from './components/smart/configuration-panel/ConfigurationPanel';
 // import { BrowserWindow } from 'electron';
 
 function App(): React.JSX.Element {
@@ -63,16 +67,25 @@ function App(): React.JSX.Element {
     setIsFullscreen(true);
   };
 
-  // Configuration management
-  const [configuration, setConfiguration] = React.useState<Configuration>({
-    timeStretchSelected: TIME_STRETCHS[0],
-  } as Configuration);
+  // UserConfiguration management
+  const [userConfiguration, setUserConfiguration] = React.useState<UserConfiguration>(new UserConfiguration());
+  useEffect(() => {
+    const storedUserConfig = async (): Promise<void> => {
+      const userConfig = await storeService.getUserConfig();
+      setUserConfiguration(userConfig);
+    }
+    storedUserConfig();
+  }, [])
+
+
+
   const [isConfigurationPanelOpen, setIsConfigurationPanelOpen] = React.useState<boolean>(false);
   const onToggleConfigurationPanel = (): void => {
     setIsConfigurationPanelOpen((prev) => !prev);
   };
-  const onChangeConfiguration = (newConfiguration: Configuration): void => {
-    setConfiguration(newConfiguration);
+  const onChangeConfiguration = (newConfiguration: UserConfiguration): void => {
+    setUserConfiguration(newConfiguration);
+    storeService.setUserConfig(newConfiguration);
     stopTimer();
   };
 
@@ -93,11 +106,11 @@ function App(): React.JSX.Element {
   const [imagePaths, setImagePaths] = React.useState<string[]>([]);
   useEffect(() => {
     const fetchImages = async (): Promise<void> => {
-      if (!configuration.selectedFolder) {
+      if (!userConfiguration.selectedFolder) {
         console.log('No folder selected, skipping image fetch');
         return;
       }
-      const imagePaths = await fsService.getFilesFromDir(configuration.selectedFolder);
+      const imagePaths = await fsService.getFilesFromDir(userConfiguration.selectedFolder);
       setImagePaths(imagePaths);
     };
     fetchImages();
@@ -105,13 +118,13 @@ function App(): React.JSX.Element {
     return () => {
       setImagePaths([]);
     };
-  }, [configuration.selectedFolder]);
+  }, [userConfiguration.selectedFolder]);
 
   useEffect(() => {
-    resetTimer(configuration.timeStretchSelected.duration);
+    resetTimer(userConfiguration.timeStretchSelected.duration);
     setIsInfiniteLoop(true); // Set infinite loop to true by default
-    setSrcImage(undefined); // Reset image source when configuration changes
-  }, [configuration.timeStretchSelected]);
+    setSrcImage(undefined); // Reset image source when userConfiguration changes
+  }, [userConfiguration.timeStretchSelected]);
 
   const [imagesShown, setImagesShown] = React.useState<string[]>([]);
   const [imageShoiwnIndex, setImageShownIndex] = React.useState<number>(-1); // Start with -1 to indicate no image shown yet
@@ -169,7 +182,7 @@ function App(): React.JSX.Element {
 
   return (
     <div className="relative flex w-dvw h-dvh bg-gray-800">
-      {/* Bt configuration */}
+      {/* Bt userConfiguration */}
       <button
         type="button"
         className="absolute z-10 top-2 left-2 flex justify-center items-center w-10 h-10 bg-gray-800 text-gray-200 rounded-md shadow hover:bg-gray-700 cursor-pointer opacity-40 hover:opacity-100 transtion duration-300 ease-in-out"
@@ -182,7 +195,7 @@ function App(): React.JSX.Element {
         className={`absolute top-14 left-2 ${isConfigurationPanelOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'} transition-opacity duration-300 ease-in-out`}
       >
         <ConfigurationPanel
-          configuration={configuration}
+          userConfiguration={userConfiguration}
           timeStrechs={TIME_STRETCHS}
           onChange={onChangeConfiguration}
         />
@@ -225,9 +238,9 @@ function App(): React.JSX.Element {
         </div>
       ) : (
         <div className="flex w-full h-full justify-center items-center text-gray-500">
-          {!configuration.selectedFolder ? (
+          {!userConfiguration.selectedFolder ? (
             <span>
-              In the configuration panel select a folder with images to pick from there a random
+              In the userConfiguration panel select a folder with images to pick from there a random
               one.
             </span>
           ) : imagePaths.length === 0 ? (

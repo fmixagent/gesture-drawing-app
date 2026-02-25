@@ -5,6 +5,8 @@ import icon from '../../resources/icon.png?asset';
 import { protocol } from 'electron/main';
 import url from 'url';
 
+import Store from 'electron-store';
+
 function createWindow(): void {
   // Create the browser window.
   const mainWindow = new BrowserWindow({
@@ -91,6 +93,21 @@ app.whenReady().then(() => {
     return result.filePaths.length > 0 ? result.filePaths[0] : null;
   });
 
+
+  const store = new Store();
+  // Store
+  ipcMain.handle('electron-store:get', (event, key) => {
+    const storedKeyValue = store.get(key);
+    return storedKeyValue;
+  });
+  ipcMain.handle('electron-store:set', (event, key, value) => {
+    store.set(key, value);
+  });
+  ipcMain.handle('electron-store:delete', (event, key) => {
+    store.delete(key);
+  });
+
+  // App
   createWindow();
 
   app.on('activate', function () {
