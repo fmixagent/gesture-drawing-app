@@ -24,6 +24,16 @@ const api = {
     return imageFiles;
   },
   isDirectory: (path: string): boolean => fs.lstatSync(path).isDirectory(),
+  setStoreValue: async (key: string, value: string): Promise<void> => {
+    await ipcRenderer.invoke('electron-store:set', key, value);
+  },
+  getStoreValue: async (key: string): Promise<string> => {
+    const value = await ipcRenderer.invoke('electron-store:get', key);
+    return value;
+  },
+  deleteStoreValue: async (key: string): Promise<void> => {
+    await ipcRenderer.invoke('electron-store:delete', key);
+  },
 };
 
 // Use `contextBridge` APIs to expose Electron APIs to
@@ -33,6 +43,7 @@ if (process.contextIsolated) {
   try {
     contextBridge.exposeInMainWorld('electron', electronAPI);
     contextBridge.exposeInMainWorld('api', api);
+
   } catch (error) {
     console.error(error);
   }

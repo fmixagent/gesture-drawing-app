@@ -1,4 +1,5 @@
-import { TimeStretch } from './configuration';
+import { TimeStretch } from "./userConfiguration";
+
 
 export class Session {
   totalDuration?: number; // in seconds
