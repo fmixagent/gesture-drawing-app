@@ -25,7 +25,7 @@ import CircularProgressBar from './components/ui/circular-progress-bar/CircularP
 function App(): React.JSX.Element {
   const onTimerStart = (): void => {
     console.log('Timer started');
-    showRandomImageFromFolder();
+    showNewRandomImageFromFolder();
   };
 
   const {
@@ -113,18 +113,25 @@ function App(): React.JSX.Element {
     setSrcImage(undefined); // Reset image source when configuration changes
   }, [configuration.timeStretchSelected]);
 
-  const showRandomImageFromFolder = (): void => {
+  const [imagesShown, setImagesShown] = React.useState<string[]>([]);
+  const [imageShoiwnIndex, setImageShownIndex] = React.useState<number>(-1); // Start with -1 to indicate no image shown yet
+  const showNewRandomImageFromFolder = (): void => {
     const imagePath = getRandomImageFromFolder();
     if (!imagePath) {
       console.log('No images available in the selected folder');
       setSrcImage(undefined); // Fallback to default logo
       return;
     }
-    console.log('Showing random image from folder: ', imagePath);
+    showImage(imagePath);
+    setImagesShown((prev) => [...prev, imagePath]);
+    setImageShownIndex((prev) => prev + 1);
 
+  };
+
+  const showImage = (imagePath: string): void => {
     const fileUrl = 'atom:' + imagePath;
     setSrcImage(fileUrl);
-  };
+  }
 
   const getRandomImageFromFolder = (): string | undefined => {
     if (imagePaths.length === 0) {
@@ -134,6 +141,31 @@ function App(): React.JSX.Element {
     const imagePath = imagePaths[randomIndex];
     return imagePath;
   };
+
+  const onNext = (): void => {
+    if(imageShoiwnIndex >= imagesShown.length - 1) {
+      console.log('No next image available, showing a random one');
+      showNewRandomImageFromFolder();
+      return;
+    }
+
+    const newIndex = imageShoiwnIndex + 1;
+    setImageShownIndex(newIndex);
+    const nextImage = imagesShown[newIndex];
+    showImage(nextImage); // Show the next image;
+  }
+
+  const onPrevious = (): void => {
+    if(imageShoiwnIndex <= 0) {
+      console.log('No previous image available');
+      return;
+    }
+
+    const newIndex = imageShoiwnIndex - 1;
+    setImageShownIndex(newIndex);
+    const previousImage = imagesShown[newIndex];
+    showImage(previousImage); // Show the previous image
+  }
 
   return (
     <div className="relative flex w-dvw h-dvh bg-gray-800">
@@ -213,6 +245,8 @@ function App(): React.JSX.Element {
           onPlay={onPlayTImer}
           onPause={onPauseTimer}
           onStop={onStopTimer}
+          onNext={onNext}
+          onPrevious={onPrevious}
         />
       </div>
     </div>
