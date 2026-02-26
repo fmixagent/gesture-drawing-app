@@ -96,14 +96,15 @@ app.whenReady().then(() => {
 
   const store = new Store();
   // Store
-  ipcMain.handle('electron-store:get', (event, key) => {
+  ipcMain.handle('electron-store:get', (_event, key) => {
+
     const storedKeyValue = store.get(key);
     return storedKeyValue;
   });
-  ipcMain.handle('electron-store:set', (event, key, value) => {
+  ipcMain.handle('electron-store:set', (_event, key, value) => {
     store.set(key, value);
   });
-  ipcMain.handle('electron-store:delete', (event, key) => {
+  ipcMain.handle('electron-store:delete', (_event, key) => {
     store.delete(key);
   });
 
