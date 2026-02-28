@@ -3,17 +3,20 @@ import FolderSelector from '../folder-selector/FolderSelector';
 import ListSelector, { ListItem } from '../list-selector/list-selector';
 import { PRELOADED_SESSIONs, Session } from '@renderer/models/session';
 import { TimeStretch, UserConfiguration } from '@renderer/models/userConfiguration';
+import { X } from 'react-bootstrap-icons';
 
 interface ConfigurationPanelProps {
   userConfiguration: UserConfiguration;
   timeStrechs: TimeStretch[];
   onChange?: (userConfiguration: UserConfiguration) => void;
+  onClose?: () => void;
 }
 
 const ConfigurationPanel: React.FC<ConfigurationPanelProps> = ({
   userConfiguration,
   timeStrechs,
   onChange,
+  onClose,
 }) => {
   const onChangeTimeStretch = (timeStretchId: string): void => {
     const findTimeStretch = timeStrechs.find((ts) => ts.id === timeStretchId);
@@ -42,11 +45,14 @@ const ConfigurationPanel: React.FC<ConfigurationPanelProps> = ({
   }));
 
   return (
-    <div className="flex w-[10rem] h-full flex-col gap-10 items-enter bg-black/50  p-3 rounded-md">
+    <div className="flex w-full h-full flex-col gap-10 items-enter bg-gray-900  p-3 rounded-md shadow overflow-y-auto">
       <section>
-        <h1 className="color-white text-gray-100 border-b border-dotted border-gray-300/40 pb-2 mb-3 font-semibold">
-          Time stretch
-        </h1>
+        <header className="w-full flex justify-between items-center border-b border-dotted border-gray-300/40 pb-2 mb-3 font-semibold">
+          <h1 className="color-white text-gray-100 ">Time stretch</h1>
+          <button type="button" className="cursor-pointer" onClick={onClose}>
+            <X className="text-white/50 w-8 h-8" />
+          </button>
+        </header>
         <main className="flex flex-col gap-3">
           {timeStrechs.map((timeStretch) => (
             <button
@@ -54,7 +60,7 @@ const ConfigurationPanel: React.FC<ConfigurationPanelProps> = ({
               className={`flex-1 rounded-md border border-transparent px-4 py-5 text-sm font-medium shadow-sm transition-colors duration-200 ease-in-out ${
                 userConfiguration?.timeStretchSelected?.id === timeStretch.id
                   ? 'bg-gray-300 text-gray-900 '
-                  : 'cursor-pointer bg-gray-900 text-gray-300 hover:bg-gray-100 hover:text-gray-900'
+                  : 'cursor-pointer bg-gray-800 text-gray-300 hover:bg-gray-700 hover:text-gray-100'
               }`}
               onClick={() => onChangeTimeStretch(timeStretch.id)}
             >
@@ -70,7 +76,10 @@ const ConfigurationPanel: React.FC<ConfigurationPanelProps> = ({
           Folder selected
         </h1>
         <main className="flex flex-col gap-3">
-          <FolderSelector selectedFolder={userConfiguration?.selectedFolder} onFolderSelected={onFolderSelected} />
+          <FolderSelector
+            selectedFolder={userConfiguration?.selectedFolder}
+            onFolderSelected={onFolderSelected}
+          />
         </main>
       </section>
     </div>
