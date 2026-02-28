@@ -68,19 +68,21 @@ function App(): React.JSX.Element {
   };
 
   // UserConfiguration management
-  const [userConfiguration, setUserConfiguration] = React.useState<UserConfiguration>(new UserConfiguration());
+  const [userConfiguration, setUserConfiguration] = React.useState<UserConfiguration>(
+    new UserConfiguration()
+  );
   useEffect(() => {
     const storedUserConfig = async (): Promise<void> => {
       const userConfig = await storeService.getUserConfig();
       setUserConfiguration(userConfig);
-    }
+    };
     storedUserConfig();
-  }, [])
-
-
+  }, []);
 
   const [isConfigurationPanelOpen, setIsConfigurationPanelOpen] = React.useState<boolean>(false);
   const onToggleConfigurationPanel = (): void => {
+    const newState = !isConfigurationPanelOpen;
+    newState ? pauseTimer() : startTimer();
     setIsConfigurationPanelOpen((prev) => !prev);
   };
   const onChangeConfiguration = (newConfiguration: UserConfiguration): void => {
@@ -138,13 +140,12 @@ function App(): React.JSX.Element {
     showImage(imagePath);
     setImagesShown((prev) => [...prev, imagePath]);
     setImageShownIndex((prev) => prev + 1);
-
   };
 
   const showImage = (imagePath: string): void => {
     const fileUrl = 'atom:' + imagePath;
     setSrcImage(fileUrl);
-  }
+  };
 
   const getRandomImageFromFolder = (): string | undefined => {
     if (imagePaths.length === 0) {
@@ -156,7 +157,7 @@ function App(): React.JSX.Element {
   };
 
   const onNext = (): void => {
-    if(imageShoiwnIndex >= imagesShown.length - 1) {
+    if (imageShoiwnIndex >= imagesShown.length - 1) {
       console.log('No next image available, showing a random one');
       showNewRandomImageFromFolder();
       return;
@@ -166,10 +167,10 @@ function App(): React.JSX.Element {
     setImageShownIndex(newIndex);
     const nextImage = imagesShown[newIndex];
     showImage(nextImage); // Show the next image;
-  }
+  };
 
   const onPrevious = (): void => {
-    if(imageShoiwnIndex <= 0) {
+    if (imageShoiwnIndex <= 0) {
       console.log('No previous image available');
       return;
     }
@@ -178,7 +179,7 @@ function App(): React.JSX.Element {
     setImageShownIndex(newIndex);
     const previousImage = imagesShown[newIndex];
     showImage(previousImage); // Show the previous image
-  }
+  };
 
   return (
     <div className="relative flex w-dvw h-dvh bg-gray-800">
@@ -191,15 +192,24 @@ function App(): React.JSX.Element {
       >
         <GearFill className="w-5 h-5" />
       </button>
-      <div
-        className={`absolute top-14 left-2 ${isConfigurationPanelOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'} transition-opacity duration-300 ease-in-out`}
-      >
-        <ConfigurationPanel
-          userConfiguration={userConfiguration}
-          timeStrechs={TIME_STRETCHS}
-          onChange={onChangeConfiguration}
-        />
+
+      <div className="top-0 left-0 w-full h-full absolute z-30 pointer-events-none">
+        <div
+          className={`absolute w-[30%] h-full top-0 ${isConfigurationPanelOpen ? 'opacity-100 pointer-events-auto left-0' : 'opacity-0 pointer-events-none -left-[30%]'} transition-all duration-300 ease-in-out`}
+        >
+          <ConfigurationPanel
+            userConfiguration={userConfiguration}
+            timeStrechs={TIME_STRETCHS}
+            onChange={onChangeConfiguration}
+            onClose={onToggleConfigurationPanel}
+          />
+        </div>
+        <div
+          onClick={onToggleConfigurationPanel}
+          className={` w-full h-full ${isConfigurationPanelOpen ? 'pointer-events-auto bg-gray-900/90' : 'bg-gray-900/0 pointer-events-none'}`}
+        ></div>
       </div>
+
       {/* Bt fullscreen */}
       <button
         type="button"
@@ -213,6 +223,7 @@ function App(): React.JSX.Element {
           <ArrowsFullscreen className="w-5 h-5" />
         )}
       </button>
+
       {/* Timer */}
       <div
         className={`absolute  w-40 h-40 bottom-18 right-2  pointer-events-none transition-opacity duration-300 ease-in-out`}
