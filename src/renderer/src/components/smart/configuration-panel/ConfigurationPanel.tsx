@@ -43,7 +43,7 @@ const ConfigurationPanel: React.FC<ConfigurationPanelProps> = ({
     name: session.sequenceName || `Session (${session.totalDuration} seconds)`,
     value: session,
   }));
-  const selectedSessionItem = sessionItems.find((sessionItem) => sessionItem.value === userConfiguration?.sessionSelected);
+  const selectedSessionItem = sessionItems.find((sessionItem) => sessionItem.value.sequenceName === userConfiguration?.sessionSelected?.sequenceName);
 
   const onChangeSession = (session: Session): void => {
     const newConfiguration: UserConfiguration = {
