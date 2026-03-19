@@ -35,7 +35,7 @@ const useCountdownTimer = (onTimerStart?: () => void): UseCountdownTimerProps =>
         }
         return 0; // Stop at 0
       }
-      if (prev === countdownTime) {
+      if (prev === countdownTime && isInfiniteLoop) {
         onTimerStart?.(); // Trigger callback when timer starts
       }
       return prev - 1;

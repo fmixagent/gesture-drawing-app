@@ -26,6 +26,9 @@ import storeService from './service/store-service';
 import ConfigurationPanel from './components/smart/configuration-panel/ConfigurationPanel';
 import SesssionProgression from './components/smart/session-progression/SessionProgression';
 
+const TIMEOUT_MOVING_DURATION = 3000;
+let TIMEOUT_ID:any;
+
 function App(): React.JSX.Element {
   const onTimerStart = (): void => {
     showNewRandomImageFromFolder();
@@ -101,7 +104,8 @@ function App(): React.JSX.Element {
     setCurrentSessionStretchIndex(0);
     setSessionProgressInSeconds(0);
     setSrcImage(undefined);
-    stopTimer();
+    userConfiguration.timeStretchSelected ? resetTimer(userConfiguration.timeStretchSelected.duration) :
+    resetTimer(userConfiguration.sessionSelected ? userConfiguration.sessionSelected.sequence[0].duration : countdownTime );
   };
 
   // Image management
@@ -150,28 +154,32 @@ function App(): React.JSX.Element {
       const elapsedSessionTime = userConfiguration.sessionSelected.sequence.slice(0, currentSessionStretchIndex).reduce((acc, stretch) => acc + stretch.duration, 0);
       const elapsedTime = elapsedSessionTime + (countdownTime - timer);
       setSessionProgressInSeconds(elapsedTime); // Add the elapsed time of the current stretch
-    }
+      elapsedTime === 1 && onNext(); // Show the first image at the start of the session
 
-    if(timer === 0 && userConfiguration.sessionSelected ) {
-      const updateCurrentSessionIndex = currentSessionStretchIndex + 1;
-      const sessionFinished = updateCurrentSessionIndex >= userConfiguration.sessionSelected.sequence.length;
+      if (timer === 0) {
+        const updateCurrentSessionIndex = currentSessionStretchIndex + 1;
+        const sessionFinished = updateCurrentSessionIndex >= userConfiguration.sessionSelected.sequence.length;
 
-      if (sessionFinished) {
-        setSessionProgressInSeconds(0);
-        setCurrentSessionStretchIndex(0);
-        stopTimer({resetTimer: true});
-        return;
+        if (sessionFinished) {
+          setSessionProgressInSeconds(0);
+          setCurrentSessionStretchIndex(0);
+          stopTimer({resetTimer: true});
+          return;
+        }
+
+        onNext(); // Move to the next image when the timer reaches 0
+        setCurrentSessionStretchIndex(updateCurrentSessionIndex);
+        const currentStretch = userConfiguration.sessionSelected.sequence[updateCurrentSessionIndex];
+        resetTimerWithoutStopping(currentStretch.duration);
+
       }
-
-      setCurrentSessionStretchIndex(updateCurrentSessionIndex);
-      const currentStretch = userConfiguration.sessionSelected.sequence[currentSessionStretchIndex];
-      resetTimerWithoutStopping(currentStretch.duration);
     }
+
   }, [timer]);
 
   // IMAGE MANAGEMENT
   const [imagesShown, setImagesShown] = React.useState<string[]>([]);
-  const [imageShoiwnIndex, setImageShownIndex] = React.useState<number>(-1);
+  const [imageShownIndex, setImageShownIndex] = React.useState<number>(-1);
   const showNewRandomImageFromFolder = (): void => {
     const imagePath = getRandomImageFromFolder();
     if (!imagePath) {
@@ -198,30 +206,47 @@ function App(): React.JSX.Element {
   };
 
   const onNext = (): void => {
-    if (imageShoiwnIndex >= imagesShown.length - 1) {
+    if (imageShownIndex >= imagesShown.length - 1) {
       showNewRandomImageFromFolder();
       return;
     }
 
-    const newIndex = imageShoiwnIndex + 1;
+    const newIndex = imageShownIndex + 1;
     setImageShownIndex(newIndex);
     const nextImage = imagesShown[newIndex];
     showImage(nextImage); // Show the next image;
   };
 
   const onPrevious = (): void => {
-    if (imageShoiwnIndex <= 0) {
+    if (imageShownIndex <= 0) {
       return;
     }
 
-    const newIndex = imageShoiwnIndex - 1;
+    const newIndex = imageShownIndex - 1;
     setImageShownIndex(newIndex);
     const previousImage = imagesShown[newIndex];
     showImage(previousImage); // Show the previous image
   };
+  const [showPlayerControls, setShowPlayerControls] = React.useState<boolean>(true);
+
+  const onMouseMove = (): void => {
+    setShowPlayerControls(true);
+    TIMEOUT_ID &&  clearTimeout(TIMEOUT_ID);
+    TIMEOUT_ID = setTimeout(() => {
+      setShowPlayerControls(false);
+    }, TIMEOUT_MOVING_DURATION);
+  }
+
+  const onMouseEnter = (): void => {
+    setShowPlayerControls(true);
+  }
+
+  const onmouseleave = (): void => {
+    setShowPlayerControls(false);
+  }
 
   return (
-    <div className="relative flex w-dvw h-dvh bg-gray-800">
+    <div className="relative flex w-dvw h-dvh bg-gray-800" onMouseMove={onMouseMove} onMouseEnter={onMouseEnter} onMouseLeave={onmouseleave}>
       {/* Bt userConfiguration */}
       <button
         type="button"
@@ -271,7 +296,7 @@ function App(): React.JSX.Element {
         <div className="absolute w-full h-full">
           <div className="relative w-40 h-40 rounded-md">
             <div
-              className={`w-full h-full ${isCounterActive ? 'opacity-100' : 'opacity-50'} transition-all ease-in-out duration-500`}
+              className={`w-full h-full ${isCounterActive ? 'opacity-100' : 'opacity-50 grayscale'} transition-all ease-in-out duration-500`}
             >
               <CounterDisplay time={timer} totalTime={countdownTime} />
               <div className="absolute inset-0 flex justify-center items-center p-3">
@@ -305,7 +330,7 @@ function App(): React.JSX.Element {
       {/* Footer */}
       <div className="absolute w-full left-0 bottom-0 z-10 ">
         <div className="flex flex-col">
-          <div className="w-full flex justify-center items-center bg-gray-900/20 py-3">
+          <div className={`w-full flex justify-center items-center bg-gray-900/20 py-3 ${showPlayerControls ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'} transition-opacity duration-300 ease-in-out`}>
             <PlayerControls
               isActive={isCounterActive}
               onPlay={onPlayTImer}
