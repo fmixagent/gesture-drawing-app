@@ -1,5 +1,5 @@
 import { JSX, useState } from 'react';
-import { ChevronDown, ChevronUp, X } from 'react-bootstrap-icons';
+import { ChevronDown, ChevronUp } from 'react-bootstrap-icons';
 import ListSelectorItem from './list-selector-item';
 
 export interface ListItem<T> {
