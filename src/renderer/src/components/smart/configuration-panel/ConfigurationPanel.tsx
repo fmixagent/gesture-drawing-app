@@ -18,22 +18,22 @@ const ConfigurationPanel: React.FC<ConfigurationPanelProps> = ({
   onChange,
   onClose,
 }) => {
+  const onFolderSelected = (folderPath: string): void => {
+    // Here you can handle the folder selection, e.g., save it to the userConfiguration
+    const newConfiguration: UserConfiguration = {
+      ...userConfiguration,
+      selectedFolder: folderPath,
+    };
+    onChange?.(newConfiguration);
+  };
+
   const onChangeTimeStretch = (timeStretchId: string): void => {
     const findTimeStretch = timeStrechs.find((ts) => ts.id === timeStretchId);
     if (!findTimeStretch) return;
     const newConfiguration: UserConfiguration = {
       ...userConfiguration,
       timeStretchSelected: findTimeStretch,
-    };
-    onChange?.(newConfiguration);
-  };
-
-  const onFolderSelected = (folderPath: string): void => {
-    console.log('Selected folder:', folderPath);
-    // Here you can handle the folder selection, e.g., save it to the userConfiguration
-    const newConfiguration: UserConfiguration = {
-      ...userConfiguration,
-      selectedFolder: folderPath,
+      sessionSelected: undefined,
     };
     onChange?.(newConfiguration);
   };
@@ -43,6 +43,16 @@ const ConfigurationPanel: React.FC<ConfigurationPanelProps> = ({
     name: session.sequenceName || `Session (${session.totalDuration} seconds)`,
     value: session,
   }));
+  const selectedSessionItem = sessionItems.find((sessionItem) => sessionItem.value.sequenceName === userConfiguration?.sessionSelected?.sequenceName);
+
+  const onChangeSession = (session: Session): void => {
+    const newConfiguration: UserConfiguration = {
+      ...userConfiguration,
+      sessionSelected: session,
+      timeStretchSelected: undefined,
+    };
+    onChange?.(newConfiguration);
+  }
 
   return (
     <div className="flex w-full h-full flex-col gap-10 items-enter bg-gray-900  p-3 rounded-md shadow overflow-y-auto">
@@ -57,7 +67,7 @@ const ConfigurationPanel: React.FC<ConfigurationPanelProps> = ({
           {timeStrechs.map((timeStretch) => (
             <button
               key={timeStretch.id}
-              className={`flex-1 rounded-md border border-transparent px-4 py-5 text-sm font-medium shadow-sm transition-colors duration-200 ease-in-out ${
+              className={`flex w-full justify-center items-center rounded-md border border-transparent px-4 h-10 text-sm font-medium shadow-sm transition-colors duration-200 ease-in-out ${
                 userConfiguration?.timeStretchSelected?.id === timeStretch.id
                   ? 'bg-gray-300 text-gray-900 '
                   : 'cursor-pointer bg-gray-800 text-gray-300 hover:bg-gray-700 hover:text-gray-100'
@@ -68,7 +78,7 @@ const ConfigurationPanel: React.FC<ConfigurationPanelProps> = ({
             </button>
           ))}
           <h2 className="color-white text-gray-100 mt-3 pb-2 mb-3 font-normal">or use a session</h2>
-          <ListSelector items={sessionItems} />
+          <ListSelector selectedItem={selectedSessionItem} items={sessionItems} onChange={onChangeSession}/>
         </main>
       </section>
       <section>

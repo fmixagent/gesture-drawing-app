@@ -1,4 +1,4 @@
-import { JSX, useEffect, useState } from 'react';
+import { JSX, useState } from 'react';
 import { ChevronDown, ChevronUp } from 'react-bootstrap-icons';
 import ListSelectorItem from './list-selector-item';
 
@@ -11,9 +11,9 @@ export interface ListItem<T> {
 type ListSelectorProps<T extends object> = {
   id?: string;
   items: ListItem<T>[];
+  selectedItem?: ListItem<T>;
   tabIndex?: number;
   label?: string;
-  selectedValue?: T;
   placeholder?: string;
   className?: string;
   flexDirection?: 'row' | 'column';
@@ -24,9 +24,9 @@ type ListSelectorProps<T extends object> = {
 const ListSelector = <T extends object>({
   id,
   items = [],
+  selectedItem,
   tabIndex = -1,
   label,
-  selectedValue,
   placeholder = 'Select...',
   className,
   flexDirection = 'column',
@@ -34,14 +34,7 @@ const ListSelector = <T extends object>({
   onChange,
 }: ListSelectorProps<T>): JSX.Element => {
   const [isCollapsed, setIsCollapsed] = useState<boolean>(true);
-  const [selectedItem, setSelectedItem] = useState<ListItem<T>>();
 
-  useEffect(() => {
-    const foundItem = items.find((item) => item.value === selectedValue);
-    if (foundItem) setSelectedItem(foundItem);
-
-    return () => {};
-  }, [selectedValue, items]);
 
   const toggleCollapse = (): void => {
     setIsCollapsed(!isCollapsed);
@@ -49,7 +42,6 @@ const ListSelector = <T extends object>({
 
   const clickItemHandler = (item: ListItem<T>): void => {
     setIsCollapsed(true);
-    setSelectedItem(item);
     onChange?.(item.value);
   };
 
@@ -66,11 +58,11 @@ const ListSelector = <T extends object>({
         </label>
       )}
       <div
-        className={`relative overflow-visible bg-gray-100 text-sm text-gray-700 ${flexDirection === 'row' ? 'h-6' : ''}`}
+        className={`relative overflow-visible bg-gray-800 text-sm text-gray-700 ${flexDirection === 'row' ? 'h-10' : ''}`}
       >
         <div
           onClick={() => !isReadOnly && toggleCollapse()}
-          className={`flex h-10 cursor-pointer items-center justify-between border border-gray-300 ${flexDirection === 'row' ? 'h-6 rounded-full' : ''}`}
+          className={`rounded-md  flex h-10 items-center justify-between cursor-pointer  ${flexDirection === 'row' ? 'h-6 rounded-full' : ''} ${selectedItem ? 'bg-gray-300 text-gray-900' : 'bg-gray-800 text-gray-300 hover:bg-gray-700 hover:text-gray-100'}`}
           tabIndex={tabIndex}
         >
           <div className="px-3 capitalize-first">
@@ -83,14 +75,13 @@ const ListSelector = <T extends object>({
         <div
           className={`absolute right-0 top-full z-10 m-0 min-w-full p-0 drop-shadow transition duration-300 ease-out ${
             isCollapsed
-              ? 'pointer-events-none -mt-1 opacity-0'
-              : 'pointer-events-auto mt-0 opacity-100'
+              ? 'pointer-events-none opacity-0'
+              : 'pointer-events-auto opacity-100'
           }`}
         >
           <ul className="flex max-h-[400px] flex-col overflow-y-auto bg-gray-100 text-gray-700">
-            {/* TODO: review key */}
             {items.map((item, index) => (
-              <li key={index}>
+              <li className='bg-gray-800 text-gray-300 hover:bg-gray-700 hover:text-gray-100' key={item.name + '-' + index}>
                 <ListSelectorItem
                   label={item.name}
                   onClick={() => !isReadOnly && clickItemHandler(item)}

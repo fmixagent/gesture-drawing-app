@@ -1,3 +1,6 @@
+import { Session } from "./session";
+
+
 export class TimeStretch {
   id!: string;
   label!: string;
@@ -12,6 +15,7 @@ export const TIME_STRETCHS: TimeStretch[] = [
 ];
 
 export class UserConfiguration {
-  timeStretchSelected: TimeStretch = TIME_STRETCHS[0];
+  timeStretchSelected?: TimeStretch;
+  sessionSelected?: Session;
   selectedFolder: string = ''; // Optional, can be undefined if not set
 }
