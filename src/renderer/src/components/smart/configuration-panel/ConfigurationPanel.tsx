@@ -67,7 +67,7 @@ const ConfigurationPanel: React.FC<ConfigurationPanelProps> = ({
           {timeStrechs.map((timeStretch) => (
             <button
               key={timeStretch.id}
-              className={`flex-1 rounded-md border border-transparent px-4 py-5 text-sm font-medium shadow-sm transition-colors duration-200 ease-in-out ${
+              className={`flex w-full justify-center items-center rounded-md border border-transparent px-4 h-10 text-sm font-medium shadow-sm transition-colors duration-200 ease-in-out ${
                 userConfiguration?.timeStretchSelected?.id === timeStretch.id
                   ? 'bg-gray-300 text-gray-900 '
                   : 'cursor-pointer bg-gray-800 text-gray-300 hover:bg-gray-700 hover:text-gray-100'

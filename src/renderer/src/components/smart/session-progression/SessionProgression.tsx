@@ -10,8 +10,11 @@ const SesssionProgression: React.FC<SesssionProgressionProps> = ({ session, prog
   const progressionPercentage = progression ? (progression / durationSession) * 100 : 0;
 
   return (
-    <div className="relative w-full h-2 left-0 bottom-0">
-      <div className='absolute left-0 top-0 h-full z-10 bg-green-700' style={{width:`${progressionPercentage}%`}}></div>
+    <div className="relative w-full h-4 left-0 bottom-0">
+      <div className='absolute left-0 top-0 w-full h-1/2 z-10'>
+        <div className='absolute top-0 left-0 h-full z-20 bg-gray-300' style={{ width: `${progressionPercentage}%` }}></div>
+        <div className='w-full h-full bg-black'></div>
+      </div>
       <div className="w-full flex justify-start items-center h-full">
         {session.sequence.map((timeStreth, index) => {
           const widthPercentage = (timeStreth.duration / durationSession) * 100;
@@ -19,7 +22,7 @@ const SesssionProgression: React.FC<SesssionProgressionProps> = ({ session, prog
           return (
             <div
               key={index}
-              className={`h-full last:border-none border-gray-300/20 border-r-[1px] ${isOdd ? 'bg-gray-700' : 'bg-gray-900'}`}
+              className={`h-full last:border-none border-gray-300/60 border-r-[1px] ${isOdd ? 'bg-gray-700' : 'bg-gray-700'}`}
               style={{ width: `${widthPercentage}%` }}
             />
           );

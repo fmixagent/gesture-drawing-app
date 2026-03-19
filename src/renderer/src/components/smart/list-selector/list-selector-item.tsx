@@ -8,10 +8,10 @@ type ListSelectorItemProps = {
 const ListSelectorItem: React.FC<ListSelectorItemProps> = ({ label, onClick }) => {
   return (
     <div
-      className="flex h-10 cursor-pointer items-center justify-start whitespace-nowrap border-t border-dotted border-gray-400 px-3 duration-300 ease-out"
+      className="flex h-10 cursor-pointer items-center justify-start whitespace-nowrap border-t border-solid border-gray-400/30 px-3 duration-300 ease-out"
       onClick={onClick}
     >
-      <div className="mr-2 inline-block">{label}</div>
+      <div>{label}</div>
     </div>
   );
 };

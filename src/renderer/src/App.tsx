@@ -232,6 +232,7 @@ function App(): React.JSX.Element {
         <GearFill className="w-5 h-5" />
       </button>
 
+      {/* User configuration panel */}
       <div className="top-0 left-0 w-full h-full absolute z-30 pointer-events-none">
         <div
           className={`absolute w-[30%] h-full top-0 ${isConfigurationPanelOpen ? 'opacity-100 pointer-events-auto left-0' : 'opacity-0 pointer-events-none -left-[30%]'} transition-all duration-300 ease-in-out`}

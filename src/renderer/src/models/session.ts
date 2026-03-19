@@ -10,6 +10,15 @@ export class Session {
 export const PRELOADED_SESSIONs: Session[] = [
   {
     totalDuration: 1800, // 30 minutes
+    sequenceName: 'For testing (25s)',
+    sequence: [
+      { id: '1', label: '5s', duration: 5 },
+      { id: '1', label: '10s', duration: 10 },
+      { id: '1', label: '10s', duration: 10 },
+    ],
+  },
+  {
+    totalDuration: 1800, // 30 minutes
     sequenceName: 'Short20 (20min)',
     sequence: [
       { id: '1', label: '1min', duration: 60 },
