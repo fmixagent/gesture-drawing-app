@@ -9,8 +9,34 @@ export class Session {
 
 export const PRELOADED_SESSIONs: Session[] = [
   {
+    totalDuration: 1800, // 30 minutes
+    sequenceName: 'Short20 (20min)',
+    sequence: [
+      { id: '1', label: '1min', duration: 60 },
+      { id: '1', label: '1min', duration: 60 },
+      { id: '2', label: '3min', duration: 180 },
+      { id: '3', label: '5 min', duration: 300 },
+      { id: '4', label: '10 min', duration: 600 },
+    ],
+  },
+  {
+    totalDuration: 1800, // 30 minutes
+    sequenceName: 'Short30 (30min)',
+    sequence: [
+      { id: '1', label: '1min', duration: 60 },
+      { id: '1', label: '1min', duration: 60 },
+      { id: '1', label: '1min', duration: 60 },
+      { id: '1', label: '1min', duration: 60 },
+      { id: '2', label: '3min', duration: 180 },
+      { id: '2', label: '3min', duration: 180 },
+      { id: '3', label: '5 min', duration: 300 },
+      { id: '3', label: '5 min', duration: 300 },
+      { id: '4', label: '10 min', duration: 600 },
+    ],
+  },
+  {
     totalDuration: 2100, // 35 minutes
-    sequenceName: 'Short Session (35min)',
+    sequenceName: 'Short35 (35min)',
     sequence: [
       { id: '1', label: '1min', duration: 60 },
       { id: '1', label: '1min', duration: 60 },
@@ -28,7 +54,7 @@ export const PRELOADED_SESSIONs: Session[] = [
   },
   {
     totalDuration: 6000, // 100 minutes
-    sequenceName: 'Medium Session (100min)',
+    sequenceName: 'LongSession (100min)',
     sequence: [
       { id: '5', label: '15 min', duration: 900 },
       { id: '6', label: '20 min', duration: 1200 },

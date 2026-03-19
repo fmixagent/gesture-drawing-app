@@ -2,6 +2,10 @@ import { useState } from 'react';
 
 const DEFAULT_COUNTDOWN_TIME = 60; // Default countdown time in seconds
 
+type StopTimerOptions = {
+  resetTimer?: boolean; // Whether to reset the timer to initial time after stopping
+};
+
 type UseCountdownTimerProps = {
   timer: number;
   isActive: boolean;
@@ -10,8 +14,9 @@ type UseCountdownTimerProps = {
   setCountdownTime: (time: number) => void;
   startTimer: () => void;
   pauseTimer: () => void;
-  stopTimer: () => void;
+  stopTimer: (stopTimerOptons?: StopTimerOptions) => void;
   resetTimer: (duration: number) => void;
+  resetTimerWithoutStopping: (duration: number) => void;
 };
 
 const useCountdownTimer = (onTimerStart?: () => void): UseCountdownTimerProps => {
@@ -54,13 +59,13 @@ const useCountdownTimer = (onTimerStart?: () => void): UseCountdownTimerProps =>
     }
   };
 
-  const stopTimer = (): void => {
+  const stopTimer = (stopTimerOptons?: StopTimerOptions): void => {
     if (timerIinterval) {
       clearInterval(timerIinterval);
       setTimerInterval(null);
       setIsActive(false);
     }
-    setTimer(countdownTime); // Reset to initial time or default
+    stopTimerOptons?.resetTimer && setTimer(countdownTime); // Reset to initial time or default
   };
 
   const resetTimer = (duration: number): void => {
@@ -73,6 +78,11 @@ const useCountdownTimer = (onTimerStart?: () => void): UseCountdownTimerProps =>
     setTimer(duration); // Reset to initial time or default
   };
 
+  const resetTimerWithoutStopping = (duration: number): void => {
+    setCountdownTime(duration);
+    setTimer(duration); // Reset to initial time or default
+  }
+
   return {
     timer,
     isActive,
@@ -83,6 +93,7 @@ const useCountdownTimer = (onTimerStart?: () => void): UseCountdownTimerProps =>
     pauseTimer,
     stopTimer,
     resetTimer,
+    resetTimerWithoutStopping
   };
 };
 

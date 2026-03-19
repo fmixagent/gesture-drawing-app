@@ -24,11 +24,10 @@ import CircularProgressBar from './components/ui/circular-progress-bar/CircularP
 import { TIME_STRETCHS, UserConfiguration } from './models/userConfiguration';
 import storeService from './service/store-service';
 import ConfigurationPanel from './components/smart/configuration-panel/ConfigurationPanel';
-// import { BrowserWindow } from 'electron';
+import SesssionProgression from './components/smart/session-progression/SessionProgression';
 
 function App(): React.JSX.Element {
   const onTimerStart = (): void => {
-    console.log('Timer started');
     showNewRandomImageFromFolder();
   };
 
@@ -41,6 +40,7 @@ function App(): React.JSX.Element {
     pauseTimer,
     stopTimer,
     resetTimer,
+    resetTimerWithoutStopping
   } = useCountdownTimer(onTimerStart);
 
   // Listen for fullscreen events via Electron IPC if needed
@@ -57,7 +57,6 @@ function App(): React.JSX.Element {
   const [isFullscreen, setIsFullscreen] = React.useState<boolean>(false);
 
   const onIpcFullscreen = (): void => {
-    console.log('Toggling fullscreen mode');
     if (isFullscreen) {
       window.electron.ipcRenderer.send('exitfullscreen');
       setIsFullscreen(false);
@@ -81,8 +80,8 @@ function App(): React.JSX.Element {
 
   const [isConfigurationPanelOpen, setIsConfigurationPanelOpen] = React.useState<boolean>(false);
   const onToggleConfigurationPanel = (): void => {
-    const newState = !isConfigurationPanelOpen;
-    newState ? pauseTimer() : startTimer();
+    const isOpen = !isConfigurationPanelOpen;
+    isOpen && pauseTimer();
     setIsConfigurationPanelOpen((prev) => !prev);
   };
   const onChangeConfiguration = (newConfiguration: UserConfiguration): void => {
@@ -99,6 +98,8 @@ function App(): React.JSX.Element {
     pauseTimer();
   };
   const onStopTimer = (): void => {
+    setCurrentSessionStretchIndex(0);
+    setSessionProgressInSeconds(0);
     setSrcImage(undefined);
     stopTimer();
   };
@@ -122,19 +123,59 @@ function App(): React.JSX.Element {
     };
   }, [userConfiguration.selectedFolder]);
 
+  // Reset timer and image when time stretch changes
   useEffect(() => {
+    if (!userConfiguration.timeStretchSelected) return;
+
     resetTimer(userConfiguration.timeStretchSelected.duration);
-    setIsInfiniteLoop(true); // Set infinite loop to true by default
-    setSrcImage(undefined); // Reset image source when userConfiguration changes
+    setIsInfiniteLoop(true);
+    setSrcImage(undefined);
   }, [userConfiguration.timeStretchSelected]);
 
+  // Reset timer and image when time stretch changes
+  const [currentSessionStretchIndex, setCurrentSessionStretchIndex] = React.useState<number>(0);
+  useEffect(() => {
+    if (!userConfiguration.sessionSelected) return;
+
+    resetTimer(userConfiguration.sessionSelected.sequence[currentSessionStretchIndex].duration);
+    setIsInfiniteLoop(false);
+    setSrcImage(undefined);
+  }, [userConfiguration.sessionSelected]);
+
+  // Session management
+  const [sessionProgressInSeconds, setSessionProgressInSeconds] = React.useState<number>(0);
+  useEffect(() => {
+    // Update the session progression in seconds
+    if (userConfiguration.sessionSelected) {
+      const elapsedSessionTime = userConfiguration.sessionSelected.sequence.slice(0, currentSessionStretchIndex).reduce((acc, stretch) => acc + stretch.duration, 0);
+      const elapsedTime = elapsedSessionTime + (countdownTime - timer);
+      setSessionProgressInSeconds(elapsedTime); // Add the elapsed time of the current stretch
+    }
+
+    if(timer === 0 && userConfiguration.sessionSelected ) {
+      const updateCurrentSessionIndex = currentSessionStretchIndex + 1;
+      const sessionFinished = updateCurrentSessionIndex >= userConfiguration.sessionSelected.sequence.length;
+
+      if (sessionFinished) {
+        setSessionProgressInSeconds(0);
+        setCurrentSessionStretchIndex(0);
+        stopTimer({resetTimer: true});
+        return;
+      }
+
+      setCurrentSessionStretchIndex(updateCurrentSessionIndex);
+      const currentStretch = userConfiguration.sessionSelected.sequence[currentSessionStretchIndex];
+      resetTimerWithoutStopping(currentStretch.duration);
+    }
+  }, [timer]);
+
+  // IMAGE MANAGEMENT
   const [imagesShown, setImagesShown] = React.useState<string[]>([]);
-  const [imageShoiwnIndex, setImageShownIndex] = React.useState<number>(-1); // Start with -1 to indicate no image shown yet
+  const [imageShoiwnIndex, setImageShownIndex] = React.useState<number>(-1);
   const showNewRandomImageFromFolder = (): void => {
     const imagePath = getRandomImageFromFolder();
     if (!imagePath) {
-      console.log('No images available in the selected folder');
-      setSrcImage(undefined); // Fallback to default logo
+      setSrcImage(undefined);
       return;
     }
     showImage(imagePath);
@@ -158,7 +199,6 @@ function App(): React.JSX.Element {
 
   const onNext = (): void => {
     if (imageShoiwnIndex >= imagesShown.length - 1) {
-      console.log('No next image available, showing a random one');
       showNewRandomImageFromFolder();
       return;
     }
@@ -171,7 +211,6 @@ function App(): React.JSX.Element {
 
   const onPrevious = (): void => {
     if (imageShoiwnIndex <= 0) {
-      console.log('No previous image available');
       return;
     }
 
@@ -263,15 +302,23 @@ function App(): React.JSX.Element {
       )}
 
       {/* Footer */}
-      <div className="absolute flex justify-center items-center  w-full bottom-0 bg-gray-900/20 z-10 py-3 ">
-        <PlayerControls
-          isActive={isCounterActive}
-          onPlay={onPlayTImer}
-          onPause={onPauseTimer}
-          onStop={onStopTimer}
-          onNext={onNext}
-          onPrevious={onPrevious}
-        />
+      <div className="absolute w-full left-0 bottom-0 z-10 ">
+        <div className="flex flex-col">
+          <div className="w-full flex justify-center items-center bg-gray-900/20 py-3">
+            <PlayerControls
+              isActive={isCounterActive}
+              onPlay={onPlayTImer}
+              onPause={onPauseTimer}
+              onStop={onStopTimer}
+              onNext={onNext}
+              onPrevious={onPrevious}
+            />
+          </div>
+          {/* Session */}
+          {userConfiguration?.sessionSelected && (
+            <SesssionProgression session={userConfiguration.sessionSelected} progression={sessionProgressInSeconds} />
+          )}
+        </div>
       </div>
     </div>
   );

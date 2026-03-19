@@ -1,5 +1,5 @@
-import { JSX, useEffect, useState } from 'react';
-import { ChevronDown, ChevronUp } from 'react-bootstrap-icons';
+import { JSX, useState } from 'react';
+import { ChevronDown, ChevronUp, X } from 'react-bootstrap-icons';
 import ListSelectorItem from './list-selector-item';
 
 export interface ListItem<T> {
@@ -11,9 +11,9 @@ export interface ListItem<T> {
 type ListSelectorProps<T extends object> = {
   id?: string;
   items: ListItem<T>[];
+  selectedItem?: ListItem<T>;
   tabIndex?: number;
   label?: string;
-  selectedValue?: T;
   placeholder?: string;
   className?: string;
   flexDirection?: 'row' | 'column';
@@ -24,9 +24,9 @@ type ListSelectorProps<T extends object> = {
 const ListSelector = <T extends object>({
   id,
   items = [],
+  selectedItem,
   tabIndex = -1,
   label,
-  selectedValue,
   placeholder = 'Select...',
   className,
   flexDirection = 'column',
@@ -34,14 +34,7 @@ const ListSelector = <T extends object>({
   onChange,
 }: ListSelectorProps<T>): JSX.Element => {
   const [isCollapsed, setIsCollapsed] = useState<boolean>(true);
-  const [selectedItem, setSelectedItem] = useState<ListItem<T>>();
 
-  useEffect(() => {
-    const foundItem = items.find((item) => item.value === selectedValue);
-    if (foundItem) setSelectedItem(foundItem);
-
-    return () => {};
-  }, [selectedValue, items]);
 
   const toggleCollapse = (): void => {
     setIsCollapsed(!isCollapsed);
@@ -49,7 +42,6 @@ const ListSelector = <T extends object>({
 
   const clickItemHandler = (item: ListItem<T>): void => {
     setIsCollapsed(true);
-    setSelectedItem(item);
     onChange?.(item.value);
   };
 
