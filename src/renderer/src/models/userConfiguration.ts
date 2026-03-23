@@ -1,5 +1,4 @@
-import { Session } from "./session";
-
+import { Session } from './session';
 
 export class TimeStretch {
   id!: string;
@@ -7,11 +6,16 @@ export class TimeStretch {
   duration!: number; // in seconds
 }
 
+export const DEFAULT_CUSTOM_TIME_STRETCH: TimeStretch = {
+  id: 'customTimeStretchId',
+  label: 'Custom time',
+  duration: 600, // default to 10 minutes
+};
+
 export const TIME_STRETCHS: TimeStretch[] = [
   { id: '1', label: '1min', duration: 60 },
   { id: '2', label: '3min', duration: 180 },
   { id: '3', label: '5 min', duration: 300 },
-  { id: '4', label: '10 min', duration: 600 },
 ];
 
 export class UserConfiguration {
