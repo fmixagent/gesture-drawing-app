@@ -100,7 +100,7 @@ export const SelectField = <T extends any>({
           inputId={id ?? `${label}_select`}
           className="h-full w-full rounded-md border border-solid border-[#ababab]/50"
           styles={{
-            control: (baseStyles, state) =>
+            control: (baseStyles, _state) =>
               ({
                 ...baseStyles,
                 background: '#f1f1f1',

@@ -1,10 +1,8 @@
 import React from 'react';
 import FolderSelector from '../folder-selector/FolderSelector';
-import ListSelector, { ListItem } from '../list-selector/list-selector';
 import { PRELOADED_SESSIONs, Session } from '@renderer/models/session';
 import { TimeStretch, UserConfiguration } from '@renderer/models/userConfiguration';
 import { X } from 'react-bootstrap-icons';
-import SelectField, { SelectFieldOption } from '../select-field/select-field';
 import CreatableSelectField from '../creatable-select-field/creatable-select-field';
 
 interface ConfigurationPanelProps {
@@ -40,13 +38,6 @@ const ConfigurationPanel: React.FC<ConfigurationPanelProps> = ({
     onChange?.(newConfiguration);
   };
 
-  const sessionItems: ListItem<Session>[] = PRELOADED_SESSIONs.map((session) => ({
-    id: session.sequenceName || 'session-' + session.totalDuration,
-    name: session.sequenceName || `Session (${session.totalDuration} seconds)`,
-    value: session,
-  }));
-  const selectedSessionItem = sessionItems.find((sessionItem) => sessionItem.value.sequenceName === userConfiguration?.sessionSelected?.sequenceName);
-
   const onChangeSession = (session: Session): void => {
     const newConfiguration: UserConfiguration = {
       ...userConfiguration,
@@ -56,14 +47,6 @@ const ConfigurationPanel: React.FC<ConfigurationPanelProps> = ({
     onChange?.(newConfiguration);
   }
 
-  const [selectedSessionOption, setSelectedSessionOption] = React.useState<SelectFieldOption<Session> | undefined>(
-    userConfiguration?.sessionSelected
-      ? {
-          label: userConfiguration.sessionSelected.sequenceName || `Session (${userConfiguration.sessionSelected.totalDuration} seconds)`,
-          value: userConfiguration.sessionSelected,
-        }
-      : undefined
-  );
   const sessionOptions = PRELOADED_SESSIONs.map((session) => ({
     label: session.sequenceName || `Session (${session.totalDuration} seconds)`,
     value: session,
@@ -101,7 +84,6 @@ const ConfigurationPanel: React.FC<ConfigurationPanelProps> = ({
               value: userConfiguration.sessionSelected,
             } : undefined}
             onChange={(option) => {
-              setSelectedSessionOption(option || undefined);
               onChangeSession(option?.value as Session);
             }}
             isClearable={false}

@@ -123,7 +123,7 @@ export const CreatableSelectField = <T extends any>({
           inputId={id ?? `${label}_select`}
           className="h-full w-full rounded-md border border-solid text-sm"
           styles={{
-            control: (baseStyles, state) =>
+            control: (baseStyles, _state) =>
               ({
                 ...baseStyles,
                 background: selectedOption ? '#d1d5dc' : '#1e2939',
