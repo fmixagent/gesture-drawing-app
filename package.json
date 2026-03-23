@@ -25,7 +25,8 @@
     "@electron-toolkit/utils": "^4.0.0",
     "electron-store": "^8.2.0",
     "electron-updater": "^6.3.9",
-    "react-bootstrap-icons": "^1.11.6"
+    "react-bootstrap-icons": "^1.11.6",
+    "react-select": "^5.10.2"
   },
   "devDependencies": {
     "@electron-toolkit/eslint-config-prettier": "^3.0.0",
