@@ -271,7 +271,7 @@ function App(): React.JSX.Element {
         </div>
         <div
           onClick={onToggleConfigurationPanel}
-          className={` w-full h-full ${isConfigurationPanelOpen ? 'pointer-events-auto bg-gray-900/90' : 'bg-gray-900/0 pointer-events-none'}`}
+          className={` w-full h-full transition-all ease-in-out duration-400 ${isConfigurationPanelOpen ? 'pointer-events-auto bg-black/50' : 'bg-black/0 pointer-events-none'}`}
         ></div>
       </div>
 

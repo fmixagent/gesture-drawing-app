@@ -6,6 +6,9 @@ import { protocol } from 'electron/main';
 import url from 'url';
 
 import Store from 'electron-store';
+import { autoUpdater } from 'electron-updater';
+
+autoUpdater.checkForUpdatesAndNotify()
 
 function createWindow(): void {
   // Create the browser window.

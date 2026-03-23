@@ -14,6 +14,9 @@ asarUnpack:
 win:
   executableName: gesture-drawing-app
 nsis:
+  oneClick: true
+  allowElevation: true
+  deleteAppDataOnUninstall: false
   artifactName: ${name}-${version}-setup.${ext}
   shortcutName: ${productName}
   uninstallDisplayName: ${productName}
