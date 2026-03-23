@@ -4,6 +4,7 @@ import { PRELOADED_SESSIONs, Session } from '@renderer/models/session';
 import { TimeStretch, UserConfiguration } from '@renderer/models/userConfiguration';
 import { X } from 'react-bootstrap-icons';
 import CreatableSelectField from '../creatable-select-field/creatable-select-field';
+import TimeStretchSelector from '../time-stretch-selector/time-stretch-selector';
 
 interface ConfigurationPanelProps {
   userConfiguration: UserConfiguration;
@@ -27,12 +28,10 @@ const ConfigurationPanel: React.FC<ConfigurationPanelProps> = ({
     onChange?.(newConfiguration);
   };
 
-  const onChangeTimeStretch = (timeStretchId: string): void => {
-    const findTimeStretch = timeStrechs.find((ts) => ts.id === timeStretchId);
-    if (!findTimeStretch) return;
+  const onChangeTimeStretch = (timeStretch: TimeStretch): void => {
     const newConfiguration: UserConfiguration = {
       ...userConfiguration,
-      timeStretchSelected: findTimeStretch,
+      timeStretchSelected: timeStretch,
       sessionSelected: undefined,
     };
     onChange?.(newConfiguration);
@@ -62,19 +61,7 @@ const ConfigurationPanel: React.FC<ConfigurationPanelProps> = ({
           </button>
         </header>
         <main className="flex flex-col gap-3">
-          {timeStrechs.map((timeStretch) => (
-            <button
-              key={timeStretch.id}
-              className={`flex w-full justify-center items-center rounded-md border  px-4 h-10 text-sm font-medium shadow-sm transition-colors duration-200 ease-in-out  ${
-                userConfiguration?.timeStretchSelected?.id === timeStretch.id
-                  ? 'bg-gray-300 text-gray-900 border-gray-300'
-                  : 'cursor-pointer bg-gray-900 text-gray-300 hover:bg-gray-700 hover:text-gray-100 border-gray-300/20'
-              }`}
-              onClick={() => onChangeTimeStretch(timeStretch.id)}
-            >
-              {timeStretch.label}
-            </button>
-          ))}
+          <TimeStretchSelector selectedTimeStretch={ userConfiguration.timeStretchSelected} onSelectTimeStretch={onChangeTimeStretch}/>
           <CreatableSelectField
             label="Or select a session"
             labelClassName="text-gray-100 text-sm"
