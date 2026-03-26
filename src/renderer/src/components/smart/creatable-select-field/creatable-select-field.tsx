@@ -62,7 +62,7 @@ type SelectFieldProps<T> = {
   hasDeleteOptionFeature?: boolean;
   onOptionDelete?: (value: SingleValue<SelectFieldOption<T>>) => void;
   onCreateNewOption?: (optionName: string) => void;
-  autoUpercaseOnInput?: boolean;
+  autoUppercaseOnInput?: boolean;
   createNewOptionLabel?: string;
 };
 
@@ -85,7 +85,7 @@ export const CreatableSelectField = <T extends any>({
   hasDeleteOptionFeature = false,
   onOptionDelete,
   onCreateNewOption,
-  autoUpercaseOnInput = false,
+  autoUppercaseOnInput = false,
   createNewOptionLabel = 'Create new option',
 }: SelectFieldProps<T>) => {
   const onCreateOption = (inputValue: string) => {
@@ -95,7 +95,7 @@ export const CreatableSelectField = <T extends any>({
 
   const [inputValue, setInputValue] = useState('');
   const handleInputChange = (newValue: string) => {
-    setInputValue(autoUpercaseOnInput ? newValue.toUpperCase() : newValue);
+    setInputValue(autoUppercaseOnInput ? newValue.toUpperCase() : newValue);
   };
 
   return (
@@ -113,7 +113,10 @@ export const CreatableSelectField = <T extends any>({
       {labelElement ? (
         labelElement
       ) : label ? (
-        <label className={`capitalize-firstt mb-2 w-full truncate font-medium ${labelClassName}`} htmlFor="selectType">
+        <label
+          className={`capitalize-first mb-2 w-full truncate font-medium ${labelClassName}`}
+          htmlFor="selectType"
+        >
           {label}
           {isMandatory ? '*' : ''}
         </label>
@@ -131,8 +134,8 @@ export const CreatableSelectField = <T extends any>({
                 border: 'none',
                 borderRadius: '0.25rem',
                 cursor: options?.length > 0 ? 'pointer' : 'default',
-              } as CSSObjectWithLabel),
-            menu: (base) => ({ ...base, zIndex: 100 } as CSSObjectWithLabel),
+              }) as CSSObjectWithLabel,
+            menu: (base) => ({ ...base, zIndex: 100 }) as CSSObjectWithLabel,
           }}
           inputValue={inputValue}
           onInputChange={handleInputChange}
