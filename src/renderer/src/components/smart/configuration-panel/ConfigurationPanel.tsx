@@ -2,7 +2,7 @@ import React from 'react';
 import FolderSelector from '../folder-selector/FolderSelector';
 import { PRELOADED_SESSIONs, Session } from '@renderer/models/session';
 import { TimeStretch, UserConfiguration } from '@renderer/models/userConfiguration';
-import { PlusCircleFill, TrashFill, X } from 'react-bootstrap-icons';
+import { ChevronRight, PlusCircleFill, TrashFill, X } from 'react-bootstrap-icons';
 import CreatableSelectField from '../creatable-select-field/creatable-select-field';
 import TimeStretchSelector from '../time-stretch-selector/time-stretch-selector';
 import { createPortal } from 'react-dom';
@@ -175,6 +175,20 @@ const ConfigurationPanel: React.FC<ConfigurationPanelProps> = ({
               placeholder="Select session..."
               onCreateNewOption={onCreateNewSession}
             />
+            {userConfiguration.sessionSelected && (
+              <ul className="flex flex-wrap items-center justify-start">
+                {userConfiguration.sessionSelected.sequence.map((stretch, index) => (
+                  <li className="group flex items-center justify-start pb-3" key={index}>
+                    <div className="truncate rounded-md border border-gray-300/20 px-3 py-2 text-gray-400">
+                      {stretch.label}
+                    </div>
+                    <div className="px-2 group-last:hidden">
+                      <ChevronRight className="text-gray-300" />
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
           </main>
         </section>
         <section>
@@ -230,7 +244,7 @@ const ConfigurationPanel: React.FC<ConfigurationPanelProps> = ({
                       </button>
                     </div>
                   </section>
-                  {/* Strethc list */}
+                  {/* Stretch list */}
                   <section className="flex flex-1 flex-col overflow-hidden">
                     <div className="flex w-full flex-1 flex-col overflow-y-auto rounded-md border border-gray-300 bg-gray-200 p-3">
                       {editingSession.sequence.length === 0 ? (
