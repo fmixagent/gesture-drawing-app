@@ -13,8 +13,8 @@ export const DEFAULT_CUSTOM_TIME_STRETCH: TimeStretch = {
 };
 
 export const TIME_STRETCHS: TimeStretch[] = [
-  { id: '1', label: '1min', duration: 60 },
-  { id: '2', label: '3min', duration: 180 },
+  { id: '1', label: '1 min', duration: 60 },
+  { id: '2', label: '3 min', duration: 180 },
   { id: '3', label: '5 min', duration: 300 },
 ];
 

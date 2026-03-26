@@ -14,7 +14,6 @@ const getFilesFromDir = async (folderPath, filePaths: string[] = []): Promise<st
 const selectFolder = async (): Promise<string | null> => {
   const folderPath = await window.api.selectDirectory();
   if (!folderPath) {
-    console.log('No folder selected');
     return null;
   }
   return folderPath;

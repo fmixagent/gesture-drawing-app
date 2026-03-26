@@ -119,7 +119,6 @@ function App(): React.JSX.Element {
   useEffect(() => {
     const fetchImages = async (): Promise<void> => {
       if (!userConfiguration.selectedFolder) {
-        console.log('No folder selected, skipping image fetch');
         return;
       }
       const imagePaths = await fsService.getFilesFromDir(userConfiguration.selectedFolder);
@@ -262,7 +261,7 @@ function App(): React.JSX.Element {
       {/* Bt userConfiguration */}
       <button
         type="button"
-        className="transtion absolute top-2 left-2 z-10 flex h-10 w-10 cursor-pointer items-center justify-center rounded-md bg-gray-800 text-gray-200 opacity-40 shadow duration-300 ease-in-out hover:bg-gray-700 hover:opacity-100"
+        className="absolute top-2 left-2 z-10 flex h-10 w-10 cursor-pointer items-center justify-center rounded-md bg-gray-800 text-gray-200 opacity-40 shadow duration-300 ease-in-out hover:bg-gray-700 hover:opacity-100"
         onClick={onToggleConfigurationPanel}
         title={`${isFullscreen ? 'Exit Fullscreen' : 'Go Fullscreen'}`}
       >

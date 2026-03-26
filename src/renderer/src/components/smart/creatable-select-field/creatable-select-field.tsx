@@ -3,7 +3,10 @@ import { TrashFill, XLg } from 'react-bootstrap-icons';
 import { ActionMeta, components, CSSObjectWithLabel, SingleValue } from 'react-select';
 import CreatableSelect from 'react-select/creatable';
 
-export type SelectFieldOption<T> = {
+interface BaseValue {
+  isRemovable?: boolean;
+}
+export type SelectFieldOption<T extends BaseValue> = {
   label: string;
   value: T;
 };
@@ -17,6 +20,8 @@ const CustomClearIndicator = (props: any) => {
 };
 
 const OptionWithDelete = (props: any) => {
+  const isRemovable = props.data.value.isRemovable ?? false;
+
   const handleDeleteClick = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
     e.stopPropagation();
@@ -28,19 +33,21 @@ const OptionWithDelete = (props: any) => {
     <components.Option {...props}>
       <div className="m-0 flex items-center justify-between p-0">
         <div>{props.children}</div>
-        <button
-          type="button"
-          onClick={handleDeleteClick}
-          className="rounded text-red-500/50 transition-all duration-200 ease-in-out hover:text-red-500 focus:outline-none"
-        >
-          <TrashFill className="h-5 w-5" />
-        </button>
+        {isRemovable && (
+          <button
+            type="button"
+            onClick={handleDeleteClick}
+            className="rounded text-red-500/50 transition-all duration-200 ease-in-out hover:text-red-500 focus:outline-none"
+          >
+            <TrashFill className="h-5 w-5" />
+          </button>
+        )}
       </div>
     </components.Option>
   );
 };
 
-type SelectFieldProps<T> = {
+type SelectFieldProps<T extends BaseValue> = {
   id?: string;
   label?: string;
   labelElement?: React.ReactNode;
@@ -62,11 +69,11 @@ type SelectFieldProps<T> = {
   hasDeleteOptionFeature?: boolean;
   onOptionDelete?: (value: SingleValue<SelectFieldOption<T>>) => void;
   onCreateNewOption?: (optionName: string) => void;
-  autoUpercaseOnInput?: boolean;
+  autoUppercaseOnInput?: boolean;
   createNewOptionLabel?: string;
 };
 
-export const CreatableSelectField = <T extends any>({
+export const CreatableSelectField = <T extends BaseValue>({
   id,
   label,
   labelElement,
@@ -85,7 +92,7 @@ export const CreatableSelectField = <T extends any>({
   hasDeleteOptionFeature = false,
   onOptionDelete,
   onCreateNewOption,
-  autoUpercaseOnInput = false,
+  autoUppercaseOnInput = false,
   createNewOptionLabel = 'Create new option',
 }: SelectFieldProps<T>) => {
   const onCreateOption = (inputValue: string) => {
@@ -95,7 +102,7 @@ export const CreatableSelectField = <T extends any>({
 
   const [inputValue, setInputValue] = useState('');
   const handleInputChange = (newValue: string) => {
-    setInputValue(autoUpercaseOnInput ? newValue.toUpperCase() : newValue);
+    setInputValue(autoUppercaseOnInput ? newValue.toUpperCase() : newValue);
   };
 
   return (
@@ -113,7 +120,10 @@ export const CreatableSelectField = <T extends any>({
       {labelElement ? (
         labelElement
       ) : label ? (
-        <label className={`capitalize-firstt mb-2 w-full truncate font-medium ${labelClassName}`} htmlFor="selectType">
+        <label
+          className={`capitalize-first mb-2 w-full truncate font-medium ${labelClassName}`}
+          htmlFor="selectType"
+        >
           {label}
           {isMandatory ? '*' : ''}
         </label>
@@ -131,8 +141,8 @@ export const CreatableSelectField = <T extends any>({
                 border: 'none',
                 borderRadius: '0.25rem',
                 cursor: options?.length > 0 ? 'pointer' : 'default',
-              } as CSSObjectWithLabel),
-            menu: (base) => ({ ...base, zIndex: 100 } as CSSObjectWithLabel),
+              }) as CSSObjectWithLabel,
+            menu: (base) => ({ ...base, zIndex: 100 }) as CSSObjectWithLabel,
           }}
           inputValue={inputValue}
           onInputChange={handleInputChange}
