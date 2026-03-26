@@ -8,7 +8,7 @@ import url from 'url';
 import Store from 'electron-store';
 import { autoUpdater } from 'electron-updater';
 
-autoUpdater.checkForUpdatesAndNotify()
+autoUpdater.checkForUpdatesAndNotify();
 
 function createWindow(): void {
   // Create the browser window.
@@ -17,6 +17,7 @@ function createWindow(): void {
     height: 670,
     show: false,
     autoHideMenuBar: true,
+    alwaysOnTop: true,
     ...(process.platform === 'linux' ? { icon } : {}),
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
@@ -96,11 +97,9 @@ app.whenReady().then(() => {
     return result.filePaths.length > 0 ? result.filePaths[0] : null;
   });
 
-
   const store = new Store();
   // Store
   ipcMain.handle('electron-store:get', (_event, key) => {
-
     const storedKeyValue = store.get(key);
     return storedKeyValue;
   });
