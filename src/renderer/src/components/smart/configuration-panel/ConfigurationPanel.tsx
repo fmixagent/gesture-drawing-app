@@ -1,6 +1,5 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import FolderSelector from '../folder-selector/FolderSelector';
-import { PRELOADED_SESSIONs, Session } from '@renderer/models/session';
 import { TimeStretch, UserConfiguration } from '@renderer/models/userConfiguration';
 import { ChevronRight, PlusCircleFill, TrashFill, X } from 'react-bootstrap-icons';
 import CreatableSelectField from '../creatable-select-field/creatable-select-field';
@@ -9,6 +8,8 @@ import { createPortal } from 'react-dom';
 import ModalLayout from '@renderer/components/layout/modal/ModalLayout';
 import TextField from '../text-field/text-field';
 import Button from '@renderer/components/ui/button/Button';
+import { useAppContext } from '@renderer/context-providers/app-context';
+import { Session } from '@renderer/models/session';
 
 interface ConfigurationPanelProps {
   userConfiguration: UserConfiguration;
@@ -21,6 +22,27 @@ const ConfigurationPanel: React.FC<ConfigurationPanelProps> = ({
   onChange,
   onClose,
 }) => {
+  const { sessions, saveSession, deleteSession } = useAppContext();
+  const [sessionOptions, setSessionOptions] = useState<{ label: string; value: Session }[]>([]);
+
+  useEffect(() => {
+    const removableSessions = sessions.filter((session) => session.isRemovable);
+    const nonRemovableSessions = sessions.filter((session) => !session.isRemovable);
+    const sortedRemovableSessions = removableSessions.sort((a, b) =>
+      a.totalDuration > b.totalDuration ? 1 : -1
+    );
+    const sortedNonRemovableSessions = nonRemovableSessions.sort((a, b) =>
+      a.totalDuration > b.totalDuration ? 1 : -1
+    );
+    const sortedSessions = [...sortedNonRemovableSessions, ...sortedRemovableSessions];
+
+    const options = sortedSessions.map((session) => ({
+      label: session.sequenceName || `Session (${session.totalDuration} seconds)`,
+      value: session,
+    }));
+    setSessionOptions(options);
+  }, [sessions]);
+
   const onFolderSelected = (folderPath: string): void => {
     // Here you can handle the folder selection, e.g., save it to the userConfiguration
     const newConfiguration: UserConfiguration = {
@@ -48,20 +70,33 @@ const ConfigurationPanel: React.FC<ConfigurationPanelProps> = ({
     onChange?.(newConfiguration);
   };
 
-  const sessionOptions = PRELOADED_SESSIONs.map((session) => ({
-    label: session.sequenceName || `Session (${session.totalDuration} seconds)`,
-    value: session,
-  }));
-
   const [editingSession, setEditingSession] = React.useState<Session | null>(null);
   const onCreateNewSession = (sessionName: string): void => {
     const newSession: Session = {
       sequenceName: sessionName,
       totalDuration: 0,
       sequence: [],
+      isRemovable: true,
     };
     setEditingSession(newSession);
   };
+
+  const onDeleteSession = (session: Session): void => {
+    console.log('Attempting to delete session: ', session);
+    if (!session.isRemovable) return;
+    console.log('Deleting session: ', session);
+    deleteSession(session);
+    setEditingSession(null);
+
+    if (userConfiguration.sessionSelected?.sequenceName === session.sequenceName) {
+      const newConfiguration: UserConfiguration = {
+        ...userConfiguration,
+        sessionSelected: undefined,
+      };
+      onChange?.(newConfiguration);
+    }
+  };
+
   const onChangeEditingSessionProperty = (property: string, value: any): void => {
     if (!editingSession) return;
 
@@ -80,7 +115,7 @@ const ConfigurationPanel: React.FC<ConfigurationPanelProps> = ({
   const onSaveEditingSession = (): void => {
     if (!editingSession) return;
 
-    // TODO: save new session to some kind of storage (localStorage, file, etc.) and update the session options
+    saveSession(editingSession);
     onChangeSession(editingSession);
     setEditingSession(null);
   };
@@ -173,7 +208,9 @@ const ConfigurationPanel: React.FC<ConfigurationPanelProps> = ({
               }}
               isClearable={false}
               placeholder="Select session..."
+              hasDeleteOptionFeature={true}
               onCreateNewOption={onCreateNewSession}
+              onOptionDelete={(option) => onDeleteSession(option?.value as Session)}
             />
             {userConfiguration.sessionSelected && (
               <ul className="flex flex-wrap items-center justify-start">

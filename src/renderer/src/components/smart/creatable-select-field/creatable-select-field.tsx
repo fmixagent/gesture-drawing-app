@@ -3,7 +3,10 @@ import { TrashFill, XLg } from 'react-bootstrap-icons';
 import { ActionMeta, components, CSSObjectWithLabel, SingleValue } from 'react-select';
 import CreatableSelect from 'react-select/creatable';
 
-export type SelectFieldOption<T> = {
+interface BaseValue {
+  isRemovable?: boolean;
+}
+export type SelectFieldOption<T extends BaseValue> = {
   label: string;
   value: T;
 };
@@ -17,6 +20,8 @@ const CustomClearIndicator = (props: any) => {
 };
 
 const OptionWithDelete = (props: any) => {
+  const isRemovable = props.data.value.isRemovable ?? false;
+
   const handleDeleteClick = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
     e.stopPropagation();
@@ -28,19 +33,21 @@ const OptionWithDelete = (props: any) => {
     <components.Option {...props}>
       <div className="m-0 flex items-center justify-between p-0">
         <div>{props.children}</div>
-        <button
-          type="button"
-          onClick={handleDeleteClick}
-          className="rounded text-red-500/50 transition-all duration-200 ease-in-out hover:text-red-500 focus:outline-none"
-        >
-          <TrashFill className="h-5 w-5" />
-        </button>
+        {isRemovable && (
+          <button
+            type="button"
+            onClick={handleDeleteClick}
+            className="rounded text-red-500/50 transition-all duration-200 ease-in-out hover:text-red-500 focus:outline-none"
+          >
+            <TrashFill className="h-5 w-5" />
+          </button>
+        )}
       </div>
     </components.Option>
   );
 };
 
-type SelectFieldProps<T> = {
+type SelectFieldProps<T extends BaseValue> = {
   id?: string;
   label?: string;
   labelElement?: React.ReactNode;
@@ -66,7 +73,7 @@ type SelectFieldProps<T> = {
   createNewOptionLabel?: string;
 };
 
-export const CreatableSelectField = <T extends any>({
+export const CreatableSelectField = <T extends BaseValue>({
   id,
   label,
   labelElement,

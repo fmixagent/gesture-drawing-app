@@ -119,7 +119,6 @@ function App(): React.JSX.Element {
   useEffect(() => {
     const fetchImages = async (): Promise<void> => {
       if (!userConfiguration.selectedFolder) {
-        console.log('No folder selected, skipping image fetch');
         return;
       }
       const imagePaths = await fsService.getFilesFromDir(userConfiguration.selectedFolder);

@@ -1,21 +1,13 @@
 import { TimeStretch } from './userConfiguration';
 
 export class Session {
-  totalDuration?: number; // in seconds
-  sequenceName?: string; // Optional name for the session
+  totalDuration: number = 0; // in seconds
+  sequenceName: string = ''; // Optional name for the session
   sequence: TimeStretch[] = [];
+  isRemovable?: boolean = true;
 }
 
 export const PRELOADED_SESSIONs: Session[] = [
-  {
-    totalDuration: 1800, // 30 minutes
-    sequenceName: 'For testing (25s)',
-    sequence: [
-      { id: '1', label: '5 s', duration: 5 },
-      { id: '2', label: '10 s', duration: 10 },
-      { id: '3', label: '10 s', duration: 10 },
-    ],
-  },
   {
     totalDuration: 1800, // 30 minutes
     sequenceName: 'Short20 (20min)',
@@ -26,6 +18,7 @@ export const PRELOADED_SESSIONs: Session[] = [
       { id: '4', label: '5 min', duration: 300 },
       { id: '5', label: '10 min', duration: 600 },
     ],
+    isRemovable: false,
   },
   {
     totalDuration: 1800, // 30 minutes
@@ -41,6 +34,7 @@ export const PRELOADED_SESSIONs: Session[] = [
       { id: '8', label: '5 min', duration: 300 },
       { id: '9', label: '10 min', duration: 600 },
     ],
+    isRemovable: false,
   },
   {
     totalDuration: 2100, // 35 minutes
@@ -59,6 +53,7 @@ export const PRELOADED_SESSIONs: Session[] = [
       { id: '11', label: '5 min', duration: 300 },
       { id: '12', label: '10 min', duration: 600 },
     ],
+    isRemovable: false,
   },
   {
     totalDuration: 6000, // 100 minutes
@@ -69,5 +64,6 @@ export const PRELOADED_SESSIONs: Session[] = [
       { id: '3', label: '30 min', duration: 1800 },
       { id: '4', label: '45 min', duration: 2700 },
     ],
+    isRemovable: false,
   },
 ];
