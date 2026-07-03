@@ -9,7 +9,8 @@ import ModalLayout from '@renderer/components/layout/modal/ModalLayout';
 import TextField from '../text-field/text-field';
 import Button from '@renderer/components/ui/button/Button';
 import { useAppContext } from '@renderer/context-providers/app-context';
-import { Session } from '@renderer/models/session';
+import { getSessionNameFromSession, Session } from '@renderer/models/session';
+import { capitalizeFirstLetter, getMinutesFromSeconds } from '@renderer/helpers/utils';
 
 interface ConfigurationPanelProps {
   userConfiguration: UserConfiguration;
@@ -37,7 +38,7 @@ const ConfigurationPanel: React.FC<ConfigurationPanelProps> = ({
     const sortedSessions = [...sortedNonRemovableSessions, ...sortedRemovableSessions];
 
     const options = sortedSessions.map((session) => ({
-      label: session.sequenceName || `Session (${session.totalDuration} seconds)`,
+      label: getSessionNameFromSession(session),
       value: session,
     }));
     setSessionOptions(options);
@@ -196,9 +197,7 @@ const ConfigurationPanel: React.FC<ConfigurationPanelProps> = ({
               selectedOption={
                 userConfiguration?.sessionSelected
                   ? {
-                      label:
-                        userConfiguration.sessionSelected.sequenceName ||
-                        `Session (${userConfiguration.sessionSelected.totalDuration} seconds)`,
+                      label: getSessionNameFromSession(userConfiguration?.sessionSelected),
                       value: userConfiguration.sessionSelected,
                     }
                   : undefined
