@@ -51,18 +51,14 @@ const getAllSessions = async (): Promise<Session[]> => {
   // await window.api.deleteStoreValue(SESSION_NAMES_KEY);
   // return [];
 
-  console.log('//TEST CALL TO GET ALL SESSIONS *** ');
   const allStoredSessionNames = await getAllSessionNames();
-  console.log('//TEST allStoredSessionNames: ', allStoredSessionNames);
 
   const allStoredSessions: Session[] = PRELOADED_SESSIONs;
   for (let i = 0; i < allStoredSessionNames.length; i++) {
     const sessionName = allStoredSessionNames[i];
-    console.log('//TEST RECOVER: ', sessionName);
     const storedSessionString = await window.api.getStoreValue(sessionName);
     if (storedSessionString) {
       const storedSession: Session = JSON.parse(storedSessionString);
-      console.log('//TEST storedSession: ', storedSession);
       allStoredSessions.push(storedSession);
     }
   }
@@ -74,7 +70,6 @@ const getAllSessions = async (): Promise<Session[]> => {
   //     allStoredSessions.push(storedSession);
   //   }
   // });
-  console.log('//TEST allStoredSessions: ', allStoredSessions);
   return allStoredSessions;
 };
 

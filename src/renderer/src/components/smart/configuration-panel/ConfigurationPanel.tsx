@@ -47,7 +47,7 @@ const ConfigurationPanel: React.FC<ConfigurationPanelProps> = ({
     // Here you can handle the folder selection, e.g., save it to the userConfiguration
     const newConfiguration: UserConfiguration = {
       ...userConfiguration,
-      selectedFolder: folderPath,
+      folderSelected: folderPath,
     };
     onChange?.(newConfiguration);
   };
@@ -232,7 +232,7 @@ const ConfigurationPanel: React.FC<ConfigurationPanelProps> = ({
           </h1>
           <main className="flex flex-col gap-3">
             <FolderSelector
-              selectedFolder={userConfiguration?.selectedFolder}
+              folder={userConfiguration?.folderSelected}
               onFolderSelected={onFolderSelected}
             />
           </main>

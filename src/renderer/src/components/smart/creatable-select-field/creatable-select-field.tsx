@@ -136,8 +136,8 @@ export const CreatableSelectField = <T extends BaseValue>({
             control: (baseStyles, _state) =>
               ({
                 ...baseStyles,
-                background: selectedOption ? '#d1d5dc' : '#1e2939',
-                color: selectedOption ? '#101828' : '#d2d5dc',
+                background: selectedOption || inputValue ? '#d1d5dc' : '#1e2939',
+                color: selectedOption || inputValue ? '#101828' : '#d2d5dc',
                 border: 'none',
                 borderRadius: '0.25rem',
                 cursor: options?.length > 0 ? 'pointer' : 'default',

@@ -21,9 +21,7 @@ const AppContextProvider = (props: any) => {
   }, []);
 
   const recoverSessions = async () => {
-    console.log('//TEST CALL TO STORE SERVICE *** ');
     const recoveredSessions = await storeService.getAllSessions();
-    console.log('//RECOVERD SESSIONS: ', recoveredSessions);
     setSessions(recoveredSessions);
   };
 
