@@ -1,6 +1,7 @@
 # gesture-drawing-app
 
-An Electron application with React and TypeScript
+Just a simple desktop app to easily train gesture drawing with you own local folder of images.
+_Note: I have only test the final build and install on Windows_
 
 ## Recommended IDE Setup
 

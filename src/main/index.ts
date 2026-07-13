@@ -25,6 +25,11 @@ function createWindow(): void {
     },
   });
 
+  // Open Chrome DevTools automatically in development
+  if (process.env.NODE_ENV === 'development') {
+    mainWindow.webContents.openDevTools();
+  }
+
   mainWindow.on('ready-to-show', () => {
     mainWindow.show();
   });

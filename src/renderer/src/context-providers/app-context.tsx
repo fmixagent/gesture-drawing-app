@@ -14,16 +14,25 @@ const AppContextProvider = (props: any) => {
   const [sessions, setSessions] = useState<Session[]>([]);
   useEffect(() => {
     recoverSessions();
+
+    return (() => {
+      setSessions([]);
+    })();
   }, []);
 
   const recoverSessions = async () => {
+    console.log('//TEST CALL TO STORE SERVICE *** ');
     const recoveredSessions = await storeService.getAllSessions();
+    console.log('//RECOVERD SESSIONS: ', recoveredSessions);
     setSessions(recoveredSessions);
   };
 
   const saveSession = async (session) => {
+    console.log('//ACTUAL SESSIONS: ', sessions);
     await storeService.saveSession(session);
-    setSessions((prev) => [...prev, session]);
+    const updatedSessions = [...sessions, session];
+    console.log('//UPDATED SESSIONS: ', sessions);
+    setSessions(updatedSessions);
   };
 
   const deleteSession = async (session) => {

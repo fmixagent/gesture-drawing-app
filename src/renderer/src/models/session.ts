@@ -1,3 +1,4 @@
+import { capitalizeFirstLetter, getMinutesFromSeconds } from '@renderer/helpers/utils';
 import { TimeStretch } from './userConfiguration';
 
 export class Session {
@@ -67,3 +68,12 @@ export const PRELOADED_SESSIONs: Session[] = [
     isRemovable: false,
   },
 ];
+
+export const getSessionNameFromSession = (session: Session): string => {
+  const sessionName = session.sequenceName
+    ? session.isRemovable
+      ? `${session.sequenceName} (${getMinutesFromSeconds(session.totalDuration)} min)`
+      : session.sequenceName
+    : `Session (${session.totalDuration} seconds)`;
+  return capitalizeFirstLetter(sessionName);
+};
