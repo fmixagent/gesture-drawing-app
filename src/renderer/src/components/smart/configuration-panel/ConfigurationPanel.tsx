@@ -10,6 +10,7 @@ import TextField from '../text-field/text-field';
 import Button from '@renderer/components/ui/button/Button';
 import { useAppContext } from '@renderer/context-providers/app-context';
 import { getSessionNameFromSession, Session } from '@renderer/models/session';
+import { Bucket, getBucketNameFromBucket } from '@renderer/models/bucket';
 
 interface ConfigurationPanelProps {
   userConfiguration: UserConfiguration;
@@ -24,6 +25,7 @@ const ConfigurationPanel: React.FC<ConfigurationPanelProps> = ({
 }) => {
   const { sessions, saveSession, deleteSession } = useAppContext();
   const [sessionOptions, setSessionOptions] = useState<{ label: string; value: Session }[]>([]);
+  const [bucketOptions, setBucketOptions] = useState<{ label: string; value: Bucket }[]>([]);
 
   useEffect(() => {
     const removableSessions = sessions.filter((session) => session.isRemovable);
@@ -48,6 +50,7 @@ const ConfigurationPanel: React.FC<ConfigurationPanelProps> = ({
     const newConfiguration: UserConfiguration = {
       ...userConfiguration,
       folderSelected: folderPath,
+      bucketSelected: undefined,
     };
     onChange?.(newConfiguration);
   };
@@ -174,6 +177,27 @@ const ConfigurationPanel: React.FC<ConfigurationPanelProps> = ({
     setEditingSession(updatedSession);
   };
 
+  // Bucket
+  const onChangeBucket = (bucket: Bucket): void => {
+    const newConfiguration: UserConfiguration = {
+      ...userConfiguration,
+      folderSelected: '',
+      bucketSelected: bucket,
+      timeStretchSelected: undefined,
+    };
+    onChange?.(newConfiguration);
+  };
+
+  const onBucketDeleted = (bucket: Bucket): void => {
+    // TODO
+    console.log('//Delete bucket: ', bucket.name);
+  };
+
+  const onCreateNewBucket = (): void => {
+    // TODO
+    console.log('//Open new bucket modal');
+  };
+
   return (
     <>
       <div className="items-enter flex h-full w-full flex-col gap-10 overflow-y-auto rounded-md bg-gray-800 p-3 shadow">
@@ -226,7 +250,7 @@ const ConfigurationPanel: React.FC<ConfigurationPanelProps> = ({
             )}
           </main>
         </section>
-        <section>
+        <section className="flex flex-col gap-2">
           <h1 className="color-white mb-3 border-b border-dotted border-gray-300/40 pb-2 font-semibold text-gray-100">
             Folder selected
           </h1>
@@ -236,6 +260,27 @@ const ConfigurationPanel: React.FC<ConfigurationPanelProps> = ({
               onFolderSelected={onFolderSelected}
             />
           </main>
+          <CreatableSelectField
+            label="Or select a bucket"
+            labelClassName="text-gray-100 text-sm"
+            options={bucketOptions}
+            selectedOption={
+              userConfiguration?.bucketSelected
+                ? {
+                    label: getBucketNameFromBucket(userConfiguration?.bucketSelected),
+                    value: userConfiguration.bucketSelected,
+                  }
+                : undefined
+            }
+            onChange={(option) => {
+              onChangeBucket(option?.value as Bucket);
+            }}
+            isClearable={false}
+            placeholder="Select bucket..."
+            hasDeleteOptionFeature={true}
+            onCreateNewOption={onCreateNewBucket}
+            onOptionDelete={(option) => onBucketDeleted(option?.value as Bucket)}
+          />
         </section>
       </div>
 

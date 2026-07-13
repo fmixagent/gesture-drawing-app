@@ -1,3 +1,4 @@
+import { Bucket } from './bucket';
 import { Session } from './session';
 
 export class TimeStretch {
@@ -22,5 +23,5 @@ export class UserConfiguration {
   timeStretchSelected?: TimeStretch;
   sessionSelected?: Session;
   folderSelected: string = ''; // Optional, can be undefined if not set
-  bucketSelected: string = ''; // Optional, a bucket stores a list of urls (strings)
+  bucketSelected?: Bucket;
 }
