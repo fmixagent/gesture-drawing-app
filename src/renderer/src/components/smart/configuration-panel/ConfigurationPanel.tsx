@@ -10,7 +10,6 @@ import TextField from '../text-field/text-field';
 import Button from '@renderer/components/ui/button/Button';
 import { useAppContext } from '@renderer/context-providers/app-context';
 import { getSessionNameFromSession, Session } from '@renderer/models/session';
-import { capitalizeFirstLetter, getMinutesFromSeconds } from '@renderer/helpers/utils';
 
 interface ConfigurationPanelProps {
   userConfiguration: UserConfiguration;

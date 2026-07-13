@@ -6,9 +6,9 @@ import App from './App';
 import AppContextProvider from './context-providers/app-context';
 
 createRoot(document.getElementById('root')!).render(
-  // <StrictMode>
-  <AppContextProvider>
-    <App />
-  </AppContextProvider>
-  // </StrictMode>
+  <StrictMode>
+    <AppContextProvider>
+      <App />
+    </AppContextProvider>
+  </StrictMode>
 );
