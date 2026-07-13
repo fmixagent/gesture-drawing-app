@@ -1,0 +1,32 @@
+@import 'tailwindcss';
+
+@media (pointer: none), (pointer: coarse) {
+  *::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* width */
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+/* Track */
+*::-webkit-scrollbar-track {
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+  border-radius: 10px;
+  background-color: oklch(27.8% 0.033 256.848);
+}
+
+/* Handle */
+*::-webkit-scrollbar-thumb {
+  background: oklch(44.6% 0.03 256.802);
+  border-radius: 10px;
+}
+
+/* Handle on hover */
+*::-webkit-scrollbar-thumb:hover {
+  background: oklch(44.6% 0.03 256.802);
+}
