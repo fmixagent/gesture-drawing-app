@@ -1,3 +1,4 @@
+import { Bucket, PRELOADED_BUCKET } from '@renderer/models/bucket';
 import { PRELOADED_SESSIONS, Session } from '@renderer/models/session';
 import {
   DEFAULT_CUSTOM_TIME_STRETCH,
@@ -8,6 +9,7 @@ import {
 const USER_CONFIG_KEY = 'userConfig';
 const CUSTOM_TIME_STRETCH_KEY = 'customTimeStretch';
 const SESSION_CATEGORY = 'session';
+const BUCKET_CATEGORY = 'bucket';
 
 const getUserConfig = async (): Promise<UserConfiguration> => {
   const userConfigString = await window.api.getStoreValue(USER_CONFIG_KEY);
@@ -60,6 +62,27 @@ const deleteSession = async (session: Session) => {
   await window.api.deleteCategoryStoreValue(SESSION_CATEGORY, session.id);
 };
 
+// BUCKETS
+const getAllBuckets = async (): Promise<Bucket[]> => {
+  const allStoredBuckets: Bucket[] = [...PRELOADED_BUCKET];
+  const allCustomStoredBucketValues = await window.api.getAllCategoryStoreValues(BUCKET_CATEGORY);
+  const allCustomBuckets: Bucket[] = allCustomStoredBucketValues.map(
+    (bucketValue) => JSON.parse(bucketValue) as Bucket
+  );
+
+  const allBuckets = [...allStoredBuckets, ...allCustomBuckets];
+
+  return allBuckets;
+};
+
+const saveBucket = async (bucket: Bucket) => {
+  await window.api.setCategoryStoreValue(BUCKET_CATEGORY, bucket.id, JSON.stringify(bucket));
+};
+
+const deleteBucket = async (bucket: Bucket) => {
+  await window.api.deleteCategoryStoreValue(BUCKET_CATEGORY, bucket.id);
+};
+
 const storeService = {
   getUserConfig,
   setUserConfig,
@@ -69,6 +92,9 @@ const storeService = {
   getAllSessions,
   saveSession,
   deleteSession,
+  getAllBuckets,
+  saveBucket,
+  deleteBucket,
 };
 
 export default storeService;

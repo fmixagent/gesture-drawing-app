@@ -6,6 +6,7 @@ import TimeStretchSelector from '../time-stretch-selector/time-stretch-selector'
 import { Bucket, getBucketNameFromBucket } from '@renderer/models/bucket';
 import { X } from 'react-bootstrap-icons';
 import SessionSelectionAndManagement from '../session-selection-and-management/SessionSelectionAndManagement';
+import BucketSelectionAndManagement from '../bucket-selection-and-management/BucketSelectionAndManagement';
 
 interface ConfigurationPanelProps {
   userConfiguration: UserConfiguration;
@@ -91,27 +92,7 @@ const ConfigurationPanel: React.FC<ConfigurationPanelProps> = ({
               onFolderSelected={onFolderSelected}
             />
           </main>
-          <CreatableSelectField
-            label="Or select a bucket"
-            labelClassName="text-gray-100 text-sm"
-            options={bucketOptions}
-            selectedOption={
-              userConfiguration?.bucketSelected
-                ? {
-                    label: getBucketNameFromBucket(userConfiguration?.bucketSelected),
-                    value: userConfiguration.bucketSelected,
-                  }
-                : undefined
-            }
-            onChange={(option) => {
-              onChangeBucket(option?.value as Bucket);
-            }}
-            isClearable={false}
-            placeholder="Select bucket..."
-            hasDeleteOptionFeature={true}
-            onCreateNewOption={onCreateNewBucket}
-            onOptionDelete={(option) => onBucketDeleted(option?.value as Bucket)}
-          />
+          <BucketSelectionAndManagement userConfiguration={userConfiguration} onChange={onChange} />
         </section>
       </div>
     </>
