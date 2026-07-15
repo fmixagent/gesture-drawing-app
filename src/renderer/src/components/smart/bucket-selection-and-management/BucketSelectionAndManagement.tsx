@@ -5,7 +5,6 @@ import { Bucket, getBucketNameFromBucket } from '@renderer/models/bucket';
 import CreatableSelectField from '../creatable-select-field/creatable-select-field';
 import { useAppContext } from '@renderer/context-providers/app-context';
 import { UserConfiguration } from '@renderer/models/userConfiguration';
-import { ChevronRight } from 'react-bootstrap-icons';
 import ModalLayout from '@renderer/components/layout/modal/ModalLayout';
 import TextField from '../text-field/text-field';
 
@@ -36,8 +35,7 @@ const BucketSelectionAndManagement: React.FC<BucketSelectionAndManagementProps> 
     const newConfiguration: UserConfiguration = {
       ...userConfiguration,
       bucketSelected: bucket,
-      sessionSelected: undefined,
-      timeStretchSelected: undefined,
+      folderSelected: undefined,
     };
     onChange?.(newConfiguration);
   };
@@ -67,8 +65,7 @@ const BucketSelectionAndManagement: React.FC<BucketSelectionAndManagementProps> 
     if (userConfiguration.bucketSelected?.name === bucket.name) {
       const newConfiguration: UserConfiguration = {
         ...userConfiguration,
-        sessionSelected: undefined,
-        bucketSelected: undefined,
+        folderSelected: undefined,
       };
       onChange?.(newConfiguration);
     }

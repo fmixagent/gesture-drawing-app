@@ -22,6 +22,6 @@ export const TIME_STRETCHS: TimeStretch[] = [
 export class UserConfiguration {
   timeStretchSelected?: TimeStretch;
   sessionSelected?: Session;
-  folderSelected: string = ''; // Optional, can be undefined if not set
+  folderSelected?: string; // Optional, can be undefined if not set
   bucketSelected?: Bucket;
 }
