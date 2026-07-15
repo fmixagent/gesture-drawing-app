@@ -2,14 +2,17 @@ import { capitalizeFirstLetter, getMinutesFromSeconds } from '@renderer/helpers/
 import { TimeStretch } from './userConfiguration';
 
 export class Session {
+  id!: string;
   totalDuration: number = 0; // in seconds
   sequenceName: string = ''; // Optional name for the session
   sequence: TimeStretch[] = [];
   isRemovable?: boolean = true;
+  isEditable?: boolean = true;
 }
 
-export const PRELOADED_SESSIONs: Session[] = [
+export const PRELOADED_SESSIONS: Session[] = [
   {
+    id: '1',
     totalDuration: 1800, // 30 minutes
     sequenceName: 'Short20 (20min)',
     sequence: [
@@ -20,8 +23,10 @@ export const PRELOADED_SESSIONs: Session[] = [
       { id: '5', label: '10 min', duration: 600 },
     ],
     isRemovable: false,
+    isEditable: false,
   },
   {
+    id: '2',
     totalDuration: 1800, // 30 minutes
     sequenceName: 'Short30 (30min)',
     sequence: [
@@ -36,8 +41,10 @@ export const PRELOADED_SESSIONs: Session[] = [
       { id: '9', label: '10 min', duration: 600 },
     ],
     isRemovable: false,
+    isEditable: false,
   },
   {
+    id: '3',
     totalDuration: 2100, // 35 minutes
     sequenceName: 'Short35 (35min)',
     sequence: [
@@ -55,8 +62,10 @@ export const PRELOADED_SESSIONs: Session[] = [
       { id: '12', label: '10 min', duration: 600 },
     ],
     isRemovable: false,
+    isEditable: false,
   },
   {
+    id: '4',
     totalDuration: 6000, // 100 minutes
     sequenceName: 'LongSession (100min)',
     sequence: [
@@ -66,6 +75,7 @@ export const PRELOADED_SESSIONs: Session[] = [
       { id: '4', label: '45 min', duration: 2700 },
     ],
     isRemovable: false,
+    isEditable: false,
   },
 ];
 

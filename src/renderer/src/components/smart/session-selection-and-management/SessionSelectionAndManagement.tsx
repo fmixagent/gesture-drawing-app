@@ -48,12 +48,18 @@ const SessionSelectionAndManagement: React.FC<SessionSelectionAndManagementProps
   };
 
   const [editingSession, setEditingSession] = React.useState<Session | null>(null);
+
+  const onEditSession = (session: Session): void => {
+    console.log('Attempting to delete session: ', session);
+    if (!session.isRemovable) return;
+    setEditingSession(session);
+  };
+
   const onCreateNewSession = (sessionName: string): void => {
     const newSession: Session = {
+      ...new Session(),
+      id: crypto.randomUUID(),
       sequenceName: sessionName,
-      totalDuration: 0,
-      sequence: [],
-      isRemovable: true,
     };
     setEditingSession(newSession);
   };
@@ -170,9 +176,9 @@ const SessionSelectionAndManagement: React.FC<SessionSelectionAndManagementProps
         }}
         isClearable={false}
         placeholder="Select session..."
-        hasDeleteOptionFeature={true}
         onCreateNewOption={onCreateNewSession}
         onOptionDelete={(option) => onDeleteSession(option?.value as Session)}
+        onOptionEdit={(option) => onEditSession(option?.value as Session)}
       />
       {userConfiguration.sessionSelected && (
         <ul className="flex flex-wrap items-center justify-start">

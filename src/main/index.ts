@@ -35,12 +35,10 @@ function createWindow(): void {
   });
 
   mainWindow.on('enter-full-screen', () => {
-    console.log('Entered fullscreen mode');
     mainWindow.webContents.send('enter-full-screen');
   });
 
   mainWindow.on('leave-full-screen', () => {
-    console.log('Exited fullscreen mode');
     mainWindow.webContents.send('leave-full-screen');
   });
 

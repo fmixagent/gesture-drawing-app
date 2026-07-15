@@ -22,20 +22,39 @@ const AppContextProvider = (props: any) => {
 
   const recoverSessions = async () => {
     const recoveredSessions = await storeService.getAllSessions();
-    setSessions(recoveredSessions);
+    setSessions([...recoveredSessions]);
   };
 
   const saveSession = async (session) => {
-    console.log('//ACTUAL SESSIONS: ', sessions);
     await storeService.saveSession(session);
-    const updatedSessions = [...sessions, session];
-    console.log('//UPDATED SESSIONS: ', sessions);
-    setSessions(updatedSessions);
+
+    // Check if user session is the same as session
+    const userConfig = await storeService.getUserConfig();
+    const userSession = userConfig.sessionSelected;
+
+    if (userSession?.id === session.id) {
+      const updatedUserSection = { ...userConfig, sessionSelected: session };
+      await storeService.setUserConfig(updatedUserSection);
+      recoverSessions();
+    } else {
+      recoverSessions();
+    }
   };
 
   const deleteSession = async (session) => {
     await storeService.deleteSession(session);
-    setSessions((prev) => prev.filter((s) => s.sequenceName !== session.sequenceName));
+
+    // Check if user session is the same as session
+    const userConfig = await storeService.getUserConfig();
+    const userSession = userConfig.sessionSelected;
+
+    if (userSession?.id === session.id) {
+      const updatedUserSection = { ...userConfig, sessionSelected: undefined };
+      await storeService.setUserConfig(updatedUserSection);
+      recoverSessions();
+    } else {
+      recoverSessions();
+    }
   };
 
   return (
