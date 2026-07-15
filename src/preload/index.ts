@@ -24,15 +24,32 @@ const api = {
     return imageFiles;
   },
   isDirectory: (path: string): boolean => fs.lstatSync(path).isDirectory(),
-  setStoreValue: async (key: string, value: string): Promise<void> => {
-    await ipcRenderer.invoke('electron-store:set', key, value);
-  },
+
   getStoreValue: async (key: string): Promise<string> => {
     const value = await ipcRenderer.invoke('electron-store:get', key);
     return value;
   },
+  setStoreValue: async (key: string, value: string): Promise<void> => {
+    await ipcRenderer.invoke('electron-store:set', key, value);
+  },
   deleteStoreValue: async (key: string): Promise<void> => {
     await ipcRenderer.invoke('electron-store:delete', key);
+  },
+
+  getCategoryStoreValue: async (category: string, key: string): Promise<string> => {
+    const value = await ipcRenderer.invoke('electron-store:getCategoryValue', category, key);
+    return value;
+  },
+  setCategoryStoreValue: async (category: string, key: string, value: string): Promise<void> => {
+    console.log('//setCategoryStoreValue: ', category, key, value);
+    await ipcRenderer.invoke('electron-store:setCategoryValue', category, key, value);
+  },
+  deleteCategoryStoreValue: async (category: string, key: string): Promise<void> => {
+    await ipcRenderer.invoke('electron-store:deleteCategoryValue', category, key);
+  },
+  getAllCategoryStoreValues: async (category: string): Promise<string[]> => {
+    const values = await ipcRenderer.invoke('electron-store:getCategoryValues', category);
+    return values;
   },
 };
 
@@ -43,7 +60,6 @@ if (process.contextIsolated) {
   try {
     contextBridge.exposeInMainWorld('electron', electronAPI);
     contextBridge.exposeInMainWorld('api', api);
-
   } catch (error) {
     console.error(error);
   }

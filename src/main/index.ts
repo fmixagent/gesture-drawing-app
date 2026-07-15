@@ -113,6 +113,29 @@ app.whenReady().then(() => {
     store.delete(key);
   });
 
+  ipcMain.handle('electron-store:getCategoryValue', (_event, category, key) => {
+    const storedKeyValue = store.get(`${category}_${key}`);
+    return storedKeyValue;
+  });
+  ipcMain.handle('electron-store:setCategoryValue', (_event, category, key, value) => {
+    store.set(`${category}_${key}`, value);
+  });
+  ipcMain.handle('electron-store:deleteCategoryValue', (_event, category, key) => {
+    store.delete(`${category}_${key}`);
+  });
+  ipcMain.handle('electron-store:getCategoryValues', (_event, category) => {
+    const storedKeys = Object.keys(store.store);
+    const categoryValues: string[] = [];
+    for (let index = 0; index < storedKeys.length; index++) {
+      const key = storedKeys[index];
+      if (key.startsWith(`${category}_`)) {
+        const storedKeyValue = store.get(key);
+        categoryValues.push(storedKeyValue as string);
+      }
+    }
+    return categoryValues;
+  });
+
   // App
   createWindow();
 

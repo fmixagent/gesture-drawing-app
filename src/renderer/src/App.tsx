@@ -9,9 +9,15 @@ declare global {
       selectDirectory: () => Promise<string | null>;
       readDirFileNames: (path: string) => Promise<string[]>;
       isDirectory: (path: string) => boolean;
-      setStoreValue: (key: string, value: string) => Promise<void>;
+
       getStoreValue: (key: string) => Promise<string>;
+      setStoreValue: (key: string, value: string) => Promise<void>;
       deleteStoreValue: (key: string) => Promise<void>;
+
+      getCategoryStoreValue: (category: string, key: string) => Promise<string>;
+      setCategoryStoreValue: (category: string, key: string, value: string) => Promise<void>;
+      deleteCategoryStoreValue: (category: string, key: string) => Promise<void>;
+      getAllCategoryStoreValues: (category: string) => Promise<string[]>;
     };
   }
 }

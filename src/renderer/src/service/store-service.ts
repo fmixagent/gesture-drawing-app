@@ -7,8 +7,7 @@ import {
 
 const USER_CONFIG_KEY = 'userConfig';
 const CUSTOM_TIME_STRETCH_KEY = 'customTimeStretch';
-const SESSION_IDS_KEY = 'sessionIds';
-const SESSION_BASE_KEY = 'session';
+const SESSION_CATEGORY = 'session';
 
 const getUserConfig = async (): Promise<UserConfiguration> => {
   const userConfigString = await window.api.getStoreValue(USER_CONFIG_KEY);
@@ -40,51 +39,25 @@ const setCustomTimeStretch = async (customTimeStretch: TimeStretch): Promise<voi
   await window.api.setStoreValue(CUSTOM_TIME_STRETCH_KEY, customTimeStretchString);
 };
 
-const getAllSessionIds = async (): Promise<string[]> => {
-  const allStoredSessionIdsValue = await window.api.getStoreValue(SESSION_IDS_KEY);
-  const allStoredSessionIds = allStoredSessionIdsValue ? JSON.parse(allStoredSessionIdsValue) : [];
-  return allStoredSessionIds;
-};
-
+// SESSIONS
 const getAllSessions = async (): Promise<Session[]> => {
-  const allStoredSessionIds = await getAllSessionIds();
-
   const allStoredSessions: Session[] = [...PRELOADED_SESSIONS];
-  for (let i = 0; i < allStoredSessionIds.length; i++) {
-    const sessionId = allStoredSessionIds[i];
-    const storedSessionString = await window.api.getStoreValue(SESSION_BASE_KEY + sessionId);
-    if (storedSessionString) {
-      const storedSession: Session = JSON.parse(storedSessionString);
-      allStoredSessions.push(storedSession);
-    }
-  }
+  const allCustomStoredSessionValues = await window.api.getAllCategoryStoreValues(SESSION_CATEGORY);
+  const allCustomSessions: Session[] = allCustomStoredSessionValues.map(
+    (sessionValue) => JSON.parse(sessionValue) as Session
+  );
 
-  return allStoredSessions;
+  const allSessions = [...allStoredSessions, ...allCustomSessions];
+
+  return allSessions;
 };
 
-//TODO: update system to recover ids from prefix SESSION_BASE_KEY
 const saveSession = async (session: Session) => {
-  const allStoredSessionIds = await getAllSessionIds();
-
-  if (!allStoredSessionIds.includes(session.id)) {
-    // New session
-    const updatedStoredSessionIds = [...allStoredSessionIds, session.id];
-    await window.api.setStoreValue(SESSION_IDS_KEY, JSON.stringify(updatedStoredSessionIds));
-  }
-
-  // Update session
-  await window.api.setStoreValue(SESSION_BASE_KEY + session.id, JSON.stringify(session));
+  await window.api.setCategoryStoreValue(SESSION_CATEGORY, session.id, JSON.stringify(session));
 };
 
 const deleteSession = async (session: Session) => {
-  // Update session names
-  const allStoredSessionIdsValue = await window.api.getStoreValue(SESSION_IDS_KEY);
-  const allStoredSessionIds = allStoredSessionIdsValue ? JSON.parse(allStoredSessionIdsValue) : [];
-  const updatedStoredSessionIds = allStoredSessionIds.filter((id) => id !== session.id);
-  await window.api.setStoreValue(SESSION_IDS_KEY, JSON.stringify(updatedStoredSessionIds));
-
-  // Delete session key
-  await window.api.deleteStoreValue(SESSION_BASE_KEY + session.id);
+  await window.api.deleteCategoryStoreValue(SESSION_CATEGORY, session.id);
 };
 
 const storeService = {
