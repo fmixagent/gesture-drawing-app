@@ -22,7 +22,7 @@ declare global {
     };
   }
 }
-import { ArrowsFullscreen, Folder, FullscreenExit, GearFill } from 'react-bootstrap-icons';
+import { ArrowsFullscreen, Bucket, Folder, FullscreenExit, GearFill } from 'react-bootstrap-icons';
 import PlayerControls from './components/smart/player-controls/PlayerControls';
 import fsService from './service/fs-service';
 import CounterDisplay from './components/ui/counter-display/CounterDisplay';
@@ -32,13 +32,14 @@ import { UserConfiguration } from './models/userConfiguration';
 import storeService from './service/store-service';
 import ConfigurationPanel from './components/smart/configuration-panel/ConfigurationPanel';
 import SesssionProgression from './components/smart/session-progression/SessionProgression';
+import { BucketImage } from './models/bucket';
 
 const TIMEOUT_MOVING_DURATION = 3000;
 let TIMEOUT_ID: any;
 
 function App(): React.JSX.Element {
   const onTimerStart = (): void => {
-    showNewRandomImageFromFolder();
+    showNewRandomImage();
   };
 
   const {
@@ -123,6 +124,7 @@ function App(): React.JSX.Element {
   // Image management
   const [srcImage, setSrcImage] = React.useState<string>();
   const [imagePaths, setImagePaths] = React.useState<string[]>([]);
+  const [bucketImages, setBucketImages] = React.useState<BucketImage[]>([]);
   useEffect(() => {
     const fetchImages = async (): Promise<void> => {
       if (!userConfiguration.folderSelected) {
@@ -137,6 +139,17 @@ function App(): React.JSX.Element {
       setImagePaths([]);
     };
   }, [userConfiguration.folderSelected]);
+
+  useEffect(() => {
+    const bucketImages = userConfiguration.bucketSelected
+      ? userConfiguration.bucketSelected.images
+      : [];
+    setBucketImages(bucketImages);
+
+    return () => {
+      setBucketImages([]);
+    };
+  }, [userConfiguration.bucketSelected]);
 
   // Reset timer and image when time stretch changes
   useEffect(() => {
@@ -193,8 +206,15 @@ function App(): React.JSX.Element {
   // IMAGE MANAGEMENT
   const [imagesShown, setImagesShown] = React.useState<string[]>([]);
   const [imageShownIndex, setImageShownIndex] = React.useState<number>(-1);
-  const showNewRandomImageFromFolder = (): void => {
-    const imagePath = getRandomImageFromFolder();
+  const showNewRandomImage = (): void => {
+    // Is folder selected
+    let imagePath: string | undefined = undefined;
+    if (userConfiguration.folderSelected) {
+      imagePath = getRandomImageFromFolder();
+    }
+    if (userConfiguration.bucketSelected) {
+      imagePath = getRandomImageFromBucket();
+    }
     if (!imagePath) {
       setSrcImage(undefined);
       return;
@@ -205,8 +225,7 @@ function App(): React.JSX.Element {
   };
 
   const showImage = (imagePath: string): void => {
-    const fileUrl = 'atom:' + imagePath;
-    setSrcImage(fileUrl);
+    setSrcImage(imagePath);
   };
 
   const getRandomImageFromFolder = (): string | undefined => {
@@ -214,13 +233,23 @@ function App(): React.JSX.Element {
       return undefined; // Fallback to default logo if no images are available
     }
     const randomIndex = Math.floor(Math.random() * imagePaths.length);
-    const imagePath = imagePaths[randomIndex];
+    const imagePath = 'atom:' + imagePaths[randomIndex];
+    return imagePath;
+  };
+
+  const getRandomImageFromBucket = (): string | undefined => {
+    if (bucketImages.length === 0) {
+      return undefined; // Fallback to default logo if no images are available
+    }
+    const randomIndex = Math.floor(Math.random() * bucketImages.length);
+    const bucketImage: BucketImage = bucketImages[randomIndex];
+    const imagePath = bucketImage.url ?? 'atom:' + bucketImage.localPath;
     return imagePath;
   };
 
   const onNext = (): void => {
     if (imageShownIndex >= imagesShown.length - 1) {
-      showNewRandomImageFromFolder();
+      showNewRandomImage();
       return;
     }
 
@@ -331,13 +360,16 @@ function App(): React.JSX.Element {
         </div>
       ) : (
         <div className="flex h-full w-full items-center justify-center text-gray-500">
-          {!userConfiguration.folderSelected ? (
+          {!userConfiguration.folderSelected && !userConfiguration.bucketSelected ? (
             <span>
-              In the userConfiguration panel select a folder with images to pick from there a random
-              one.
+              In the userConfiguration panel select a folder or bucket with images to pick from
+              there a random one.
             </span>
-          ) : imagePaths.length === 0 ? (
-            <span>The folder selected doesn&apos;t contain any image</span>
+          ) : imagePaths.length === 0 && bucketImages.length === 0 ? (
+            <span>
+              The {userConfiguration.folderSelected ? 'folder' : 'bucket'} selected doesn&apos;t
+              contain any image
+            </span>
           ) : (
             <div className="flex flex-col items-center justify-start gap-2">
               <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gray-500">
@@ -362,18 +394,30 @@ function App(): React.JSX.Element {
               </div>
               <div className="w-70 py-10 text-center">
                 <p>
-                  Choose a folder with your samples images, choose your time stretches or session
-                  and <strong>just start drawing</strong>
+                  Choose a folder or bucket with your samples images, choose your time stretches or
+                  session and <strong>just start drawing</strong>
                 </p>
               </div>
 
-              <div className="flex flex-col items-center justify-center gap-1">
-                <div className="flex items-center justify-center gap-2 border-b border-dotted border-gray-600 pb-1">
-                  <Folder />
-                  <span>{userConfiguration.folderSelected}</span>
+              {userConfiguration.folderSelected && (
+                <div className="flex flex-col items-center justify-center gap-1">
+                  <div className="flex items-center justify-center gap-2 border-b border-dotted border-gray-600 pb-1">
+                    <Folder />
+                    <span>{userConfiguration.folderSelected}</span>
+                  </div>
+                  <span className="font-bold">{imagePaths.length} photos</span>
                 </div>
-                <span className="font-bold">{imagePaths.length} photos</span>
-              </div>
+              )}
+
+              {userConfiguration.bucketSelected && (
+                <div className="flex flex-col items-center justify-center gap-1">
+                  <div className="flex items-center justify-center gap-2 border-b border-dotted border-gray-600 pb-1">
+                    <Bucket />
+                    <span>{userConfiguration.bucketSelected.name}</span>
+                  </div>
+                  <span className="font-bold">{bucketImages.length} photos</span>
+                </div>
+              )}
             </div>
           )}
         </div>

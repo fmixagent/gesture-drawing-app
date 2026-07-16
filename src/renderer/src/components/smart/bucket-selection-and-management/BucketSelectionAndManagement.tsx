@@ -8,6 +8,7 @@ import { UserConfiguration } from '@renderer/models/userConfiguration';
 import ModalLayout from '@renderer/components/layout/modal/ModalLayout';
 import TextField from '../text-field/text-field';
 import DragAndDropArea from '../drag-and-drop-area/DragAndDropArea';
+import { capitalizeFirstLetter } from '@renderer/helpers/utils';
 
 interface BucketSelectionAndManagementProps {
   userConfiguration: UserConfiguration;
@@ -119,8 +120,9 @@ const BucketSelectionAndManagement: React.FC<BucketSelectionAndManagementProps> 
         onOptionEdit={(option) => onEditBucket(option?.value as Bucket)}
       />
       {userConfiguration.bucketSelected && (
-        <div className="w-full truncate rounded-md border border-gray-300/20 px-3 py-2 text-gray-400">
-          SELECTED: {userConfiguration.bucketSelected.name}
+        <div className="flex w-full items-center justify-start gap-2 truncate rounded-md border border-gray-300/20 px-3 py-2 text-gray-400">
+          <span>{capitalizeFirstLetter(userConfiguration.bucketSelected.name)}</span>
+          <i className="text-xs">({userConfiguration.bucketSelected.images.length} images)</i>
         </div>
       )}
 
@@ -141,14 +143,17 @@ const BucketSelectionAndManagement: React.FC<BucketSelectionAndManagementProps> 
                     onChange={(value) => onChangeEditingBucketProperty('name', value)}
                   />
                 </div>
-                <section className="flex h-full w-full flex-col items-start justify-start gap-2">
+                <section className="flex flex-1 flex-col items-start justify-start gap-2 overflow-hidden">
                   <h1 className="flex w-full flex-none font-bold">Images</h1>
-                  <div className="flex w-full flex-1">
-                    <DragAndDropArea />
+                  <div className="flex w-full flex-1 overflow-hidden">
+                    <DragAndDropArea
+                      initialImages={editingBucket?.images ?? []}
+                      onChange={(value) => onChangeEditingBucketProperty('images', value)}
+                    />
                   </div>
                 </section>
               </main>
-              <footer className="border-t border-gray-400 pt-5">
+              <footer className="pt-5">
                 <ul className="flex items-center justify-end gap-3">
                   <li>
                     <Button

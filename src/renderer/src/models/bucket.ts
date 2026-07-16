@@ -1,9 +1,14 @@
 import { capitalizeFirstLetter } from '@renderer/helpers/utils';
 
+export class BucketImage {
+  name: string = '';
+  url?: string;
+  localPath?: string;
+}
 export class Bucket {
   id!: string;
   name: string = '';
-  images: string[] = []; // url list
+  images: BucketImage[] = []; // url list
   isRemovable?: boolean = true;
   isEditable?: boolean = true;
 }
@@ -12,7 +17,7 @@ export const PRELOADED_BUCKET: Bucket[] = [
   {
     id: '1',
     name: 'Demo bucket',
-    images: ['https://example.com/image1.jpg', 'https://example.com/image2.jpg'],
+    images: [],
     isRemovable: false,
     isEditable: false,
   },

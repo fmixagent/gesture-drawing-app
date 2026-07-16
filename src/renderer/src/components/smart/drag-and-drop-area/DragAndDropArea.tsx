@@ -1,6 +1,7 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { Upload } from 'react-bootstrap-icons';
 import ImageListViewer from './ImageListViewer';
+import { BucketImage } from '@renderer/models/bucket';
 
 // --- Typings & Constants ---
 enum DropStatusEnum {
@@ -10,18 +11,18 @@ enum DropStatusEnum {
 }
 type DropStatus = `${DropStatusEnum}`;
 
-export interface Image {
-  name: string;
-  path: string;
-}
-
 interface DragAndDropAreaProps {
-  initialImages?: Image[];
+  initialImages?: BucketImage[];
+  onChange?: (images: BucketImage[]) => void;
 }
 
-const DragAndDropArea: React.FC<DragAndDropAreaProps> = ({ initialImages = [] }) => {
-  const [images, setImages] = useState<Image[]>(initialImages);
+const DragAndDropArea: React.FC<DragAndDropAreaProps> = ({ initialImages = [], onChange }) => {
+  const [images, setImages] = useState<BucketImage[]>(initialImages);
   const [dropStatus, setDropStatus] = useState<DropStatus>(DropStatusEnum.DEFAULT);
+
+  useEffect(() => {
+    onChange?.(images);
+  }, [images]);
 
   // --- Handlers ---
   const handleDragEnter = useCallback((e: React.DragEvent<HTMLDivElement>) => {
@@ -47,33 +48,29 @@ const DragAndDropArea: React.FC<DragAndDropAreaProps> = ({ initialImages = [] })
       // Simulate accepting dropped files (e.dataTransfer.files)
       const files: FileList | null = e.dataTransfer.files;
       const imageUrl = e.dataTransfer.getData('url');
-      console.log('//IMAGE URL: ', imageUrl);
-      console.log('//FILES: ', files);
-      console.log('//FILE NAME: ', files[0].name);
 
       if (!files || files.length === 0) return;
 
       const droppedFile = files[0];
 
-      let droppedImage: Image;
+      let droppedImage: BucketImage;
       if (imageUrl) {
         // File dropped from browser
         droppedImage = {
           name: droppedFile.name,
-          path: imageUrl,
+          url: imageUrl,
         };
       } else {
         // File from system
         const filePath = window.api.getPathForFile(droppedFile);
         droppedImage = {
           name: droppedFile.name,
-          path: filePath,
+          localPath: filePath,
         };
       }
 
       // Check if already exists in the list
-      const existingImage = images.find((anImage) => anImage.path === droppedImage.path);
-      if (existingImage) return;
+      if (checkIfImageAlreadyExists(droppedImage.name)) return;
 
       // Add image
       setImages([...images, droppedImage]);
@@ -81,13 +78,37 @@ const DragAndDropArea: React.FC<DragAndDropAreaProps> = ({ initialImages = [] })
     [images]
   );
 
-  const handleRemoveImage = (image: Image) => {
-    setImages(images.filter((anImage) => anImage.path !== image.path));
+  const checkIfImageAlreadyExists = (imageName: string): boolean => {
+    return images.find((anImage) => anImage.name === imageName) ? true : false;
+  };
+
+  const handleRemoveImage = (image: BucketImage) => {
+    setImages(images.filter((anImage) => anImage.name !== image.name));
+  };
+
+  const onChangeBrowse = (ev: React.ChangeEvent<HTMLInputElement>) => {
+    const files: File[] = Array.from(ev.target.files!);
+    if (files.length === 0) return;
+
+    const newImages: BucketImage[] = [];
+    for (const file of files) {
+      const imageName = file.name;
+      const filePath = window.api.getPathForFile(file);
+      const imageAlreadyExists = checkIfImageAlreadyExists(file.name);
+      if (!imageAlreadyExists) {
+        const newImage = {
+          name: imageName,
+          localPath: filePath,
+        };
+        newImages.push(newImage);
+      }
+    }
+    setImages([...images, ...newImages]);
   };
 
   return (
-    <div className="flex h-full w-full flex-col items-start justify-start gap-3">
-      <header className="flex w-full items-center justify-between gap-2">
+    <div className="flex h-full w-full flex-col items-start justify-start gap-3 overflow-hidden">
+      <header className="flex w-full flex-none items-center justify-between gap-2">
         <p>Drag and drop directly the images from your browser or browse files from the system</p>
 
         <div>
@@ -99,20 +120,16 @@ const DragAndDropArea: React.FC<DragAndDropAreaProps> = ({ initialImages = [] })
             <input
               id="file-upload"
               type="file"
-              // onChange={(e) => {
-              //   const files: File[] = Array.from(e.target.files!);
-              //   if (files.length > 0) {
-              //     onFileSelect?.(files);
-              //     setImages([...imageFiles, { id: Date.now().toString(), file: files[0] }]);
-              //   }
-              // }}
+              onChange={onChangeBrowse}
               className="hidden"
+              accept="image/*"
+              multiple
             />
           </label>
         </div>
       </header>
       <div
-        className={`relative flex w-full flex-1 flex-col border border-gray-700 transition-all duration-200 ease-in-out ${
+        className={`relative flex w-full flex-1 overflow-hidden border border-gray-300 transition-all duration-200 ease-in-out ${
           dropStatus === 'drag-over'
             ? 'border-dashed border-gray-500 bg-indigo-50'
             : 'border-gray-300 bg-white'
