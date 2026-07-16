@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { TrashFill, XLg } from 'react-bootstrap-icons';
+import { PencilFill, TrashFill, XLg } from 'react-bootstrap-icons';
 import { ActionMeta, components, CSSObjectWithLabel, SingleValue } from 'react-select';
 import CreatableSelect from 'react-select/creatable';
 
@@ -21,23 +21,38 @@ const CustomClearIndicator = (props: any) => {
 
 const OptionWithDelete = (props: any) => {
   const isRemovable = props.data.value.isRemovable ?? false;
+  const isEditable = props.data.value.isEditable ?? false;
 
   const handleDeleteClick = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
     e.stopPropagation();
-    console.log('Delete clicked for: ', props.selectProps);
     props.selectProps.onOptionDelete?.(props.data);
+  };
+
+  const handleEditClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    props.selectProps.onOptionEdit?.(props.data);
   };
 
   return (
     <components.Option {...props}>
-      <div className="m-0 flex items-center justify-between p-0">
-        <div>{props.children}</div>
+      <div className="m-0 flex items-center justify-between gap-2 p-0">
+        <div className="mr-auto">{props.children}</div>
+        {isEditable && (
+          <button
+            type="button"
+            onClick={handleEditClick}
+            className="cursor-pointer rounded text-gray-500/50 transition-all duration-200 ease-in-out hover:text-gray-500 focus:outline-none"
+          >
+            <PencilFill className="h-5 w-5" />
+          </button>
+        )}
         {isRemovable && (
           <button
             type="button"
             onClick={handleDeleteClick}
-            className="rounded text-red-500/50 transition-all duration-200 ease-in-out hover:text-red-500 focus:outline-none"
+            className="cursor-pointer rounded text-red-500/50 transition-all duration-200 ease-in-out hover:text-red-500 focus:outline-none"
           >
             <TrashFill className="h-5 w-5" />
           </button>
@@ -66,8 +81,8 @@ type SelectFieldProps<T extends BaseValue> = {
   isMandatory?: boolean;
   isDisabled?: boolean;
   noOptionsMessage?: string;
-  hasDeleteOptionFeature?: boolean;
   onOptionDelete?: (value: SingleValue<SelectFieldOption<T>>) => void;
+  onOptionEdit?: (value: SingleValue<SelectFieldOption<T>>) => void;
   onCreateNewOption?: (optionName: string) => void;
   autoUppercaseOnInput?: boolean;
   createNewOptionLabel?: string;
@@ -89,8 +104,8 @@ export const CreatableSelectField = <T extends BaseValue>({
   isMandatory = false,
   isDisabled = false,
   noOptionsMessage = 'No options',
-  hasDeleteOptionFeature = false,
   onOptionDelete,
+  onOptionEdit,
   onCreateNewOption,
   autoUppercaseOnInput = false,
   createNewOptionLabel = 'Create new option',
@@ -136,8 +151,8 @@ export const CreatableSelectField = <T extends BaseValue>({
             control: (baseStyles, _state) =>
               ({
                 ...baseStyles,
-                background: selectedOption ? '#d1d5dc' : '#1e2939',
-                color: selectedOption ? '#101828' : '#d2d5dc',
+                background: selectedOption || inputValue ? '#d1d5dc' : '#1e2939',
+                color: selectedOption || inputValue ? '#101828' : '#d2d5dc',
                 border: 'none',
                 borderRadius: '0.25rem',
                 cursor: options?.length > 0 ? 'pointer' : 'default',
@@ -153,13 +168,13 @@ export const CreatableSelectField = <T extends BaseValue>({
           isClearable={isClearable}
           components={{
             ClearIndicator: CustomClearIndicator,
-            Option: hasDeleteOptionFeature ? OptionWithDelete : components.Option,
+            Option: OptionWithDelete,
           }}
           tabIndex={1}
           placeholder={placeholder}
           isDisabled={isDisabled}
           noOptionsMessage={() => noOptionsMessage}
-          {...(hasDeleteOptionFeature && { onOptionDelete })}
+          {...{ onOptionDelete, onOptionEdit }}
           onCreateOption={onCreateOption}
           formatCreateLabel={(inputValue) => `${createNewOptionLabel}: "${inputValue}"`}
         />
