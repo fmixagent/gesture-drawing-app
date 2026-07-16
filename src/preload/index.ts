@@ -1,4 +1,4 @@
-import { contextBridge, ipcRenderer } from 'electron';
+import { contextBridge, ipcRenderer, webUtils } from 'electron';
 import { electronAPI } from '@electron-toolkit/preload';
 import * as fs from 'fs';
 import path from 'path';
@@ -51,6 +51,7 @@ const api = {
     const values = await ipcRenderer.invoke('electron-store:getCategoryValues', category);
     return values;
   },
+  getPathForFile: (file: File): string => webUtils.getPathForFile(file),
 };
 
 // Use `contextBridge` APIs to expose Electron APIs to

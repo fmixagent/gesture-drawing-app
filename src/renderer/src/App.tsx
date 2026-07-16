@@ -18,6 +18,7 @@ declare global {
       setCategoryStoreValue: (category: string, key: string, value: string) => Promise<void>;
       deleteCategoryStoreValue: (category: string, key: string) => Promise<void>;
       getAllCategoryStoreValues: (category: string) => Promise<string[]>;
+      getPathForFile: (file: File) => string;
     };
   }
 }

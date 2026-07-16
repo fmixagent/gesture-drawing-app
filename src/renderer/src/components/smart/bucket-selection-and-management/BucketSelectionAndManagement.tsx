@@ -7,6 +7,7 @@ import { useAppContext } from '@renderer/context-providers/app-context';
 import { UserConfiguration } from '@renderer/models/userConfiguration';
 import ModalLayout from '@renderer/components/layout/modal/ModalLayout';
 import TextField from '../text-field/text-field';
+import DragAndDropArea from '../drag-and-drop-area/DragAndDropArea';
 
 interface BucketSelectionAndManagementProps {
   userConfiguration: UserConfiguration;
@@ -140,7 +141,12 @@ const BucketSelectionAndManagement: React.FC<BucketSelectionAndManagementProps> 
                     onChange={(value) => onChangeEditingBucketProperty('name', value)}
                   />
                 </div>
-                <div>//TODO BUCKET MANAGEMENT//</div>
+                <section className="flex h-full w-full flex-col items-start justify-start gap-2">
+                  <h1 className="flex w-full flex-none font-bold">Images</h1>
+                  <div className="flex w-full flex-1">
+                    <DragAndDropArea />
+                  </div>
+                </section>
               </main>
               <footer className="border-t border-gray-400 pt-5">
                 <ul className="flex items-center justify-end gap-3">
