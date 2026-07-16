@@ -17,7 +17,7 @@ function createWindow(): void {
     height: 670,
     show: false,
     autoHideMenuBar: true,
-    alwaysOnTop: true,
+    alwaysOnTop: false,
     ...(process.platform === 'linux' ? { icon } : {}),
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
@@ -35,12 +35,10 @@ function createWindow(): void {
   });
 
   mainWindow.on('enter-full-screen', () => {
-    console.log('Entered fullscreen mode');
     mainWindow.webContents.send('enter-full-screen');
   });
 
   mainWindow.on('leave-full-screen', () => {
-    console.log('Exited fullscreen mode');
     mainWindow.webContents.send('leave-full-screen');
   });
 
@@ -113,6 +111,29 @@ app.whenReady().then(() => {
   });
   ipcMain.handle('electron-store:delete', (_event, key) => {
     store.delete(key);
+  });
+
+  ipcMain.handle('electron-store:getCategoryValue', (_event, category, key) => {
+    const storedKeyValue = store.get(`${category}_${key}`);
+    return storedKeyValue;
+  });
+  ipcMain.handle('electron-store:setCategoryValue', (_event, category, key, value) => {
+    store.set(`${category}_${key}`, value);
+  });
+  ipcMain.handle('electron-store:deleteCategoryValue', (_event, category, key) => {
+    store.delete(`${category}_${key}`);
+  });
+  ipcMain.handle('electron-store:getCategoryValues', (_event, category) => {
+    const storedKeys = Object.keys(store.store);
+    const categoryValues: string[] = [];
+    for (let index = 0; index < storedKeys.length; index++) {
+      const key = storedKeys[index];
+      if (key.startsWith(`${category}_`)) {
+        const storedKeyValue = store.get(key);
+        categoryValues.push(storedKeyValue as string);
+      }
+    }
+    return categoryValues;
   });
 
   // App

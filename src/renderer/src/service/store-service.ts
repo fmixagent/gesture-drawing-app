@@ -1,4 +1,5 @@
-import { PRELOADED_SESSIONs, Session } from '@renderer/models/session';
+import { Bucket, PRELOADED_BUCKET } from '@renderer/models/bucket';
+import { PRELOADED_SESSIONS, Session } from '@renderer/models/session';
 import {
   DEFAULT_CUSTOM_TIME_STRETCH,
   TimeStretch,
@@ -7,7 +8,8 @@ import {
 
 const USER_CONFIG_KEY = 'userConfig';
 const CUSTOM_TIME_STRETCH_KEY = 'customTimeStretch';
-const SESSION_NAMES_KEY = 'sessionNames';
+const SESSION_CATEGORY = 'session';
+const BUCKET_CATEGORY = 'bucket';
 
 const getUserConfig = async (): Promise<UserConfiguration> => {
   const userConfigString = await window.api.getStoreValue(USER_CONFIG_KEY);
@@ -39,68 +41,46 @@ const setCustomTimeStretch = async (customTimeStretch: TimeStretch): Promise<voi
   await window.api.setStoreValue(CUSTOM_TIME_STRETCH_KEY, customTimeStretchString);
 };
 
-const getAllSessionNames = async (): Promise<string[]> => {
-  const allStoredSessionNamesValue = await window.api.getStoreValue(SESSION_NAMES_KEY);
-  const allStoredSessionNames = allStoredSessionNamesValue
-    ? JSON.parse(allStoredSessionNamesValue)
-    : [];
-  return allStoredSessionNames;
-};
-
+// SESSIONS
 const getAllSessions = async (): Promise<Session[]> => {
-  // await window.api.deleteStoreValue(SESSION_NAMES_KEY);
-  // return [];
+  const allStoredSessions: Session[] = [...PRELOADED_SESSIONS];
+  const allCustomStoredSessionValues = await window.api.getAllCategoryStoreValues(SESSION_CATEGORY);
+  const allCustomSessions: Session[] = allCustomStoredSessionValues.map(
+    (sessionValue) => JSON.parse(sessionValue) as Session
+  );
 
-  console.log('//TEST CALL TO GET ALL SESSIONS *** ');
-  const allStoredSessionNames = await getAllSessionNames();
-  console.log('//TEST allStoredSessionNames: ', allStoredSessionNames);
+  const allSessions = [...allStoredSessions, ...allCustomSessions];
 
-  const allStoredSessions: Session[] = PRELOADED_SESSIONs;
-  for (let i = 0; i < allStoredSessionNames.length; i++) {
-    const sessionName = allStoredSessionNames[i];
-    console.log('//TEST RECOVER: ', sessionName);
-    const storedSessionString = await window.api.getStoreValue(sessionName);
-    if (storedSessionString) {
-      const storedSession: Session = JSON.parse(storedSessionString);
-      console.log('//TEST storedSession: ', storedSession);
-      allStoredSessions.push(storedSession);
-    }
-  }
-  // allStoredSessionNames.forEach(async (storedSessionName) => {
-  //   const storedSessionString = await window.api.getStoreValue(storedSessionName);
-  //   if (storedSessionString) {
-  //     const storedSession: Session = JSON.parse(storedSessionString);
-  //     console.log('//TEST storedSessionString: ', storedSessionString);
-  //     allStoredSessions.push(storedSession);
-  //   }
-  // });
-  console.log('//TEST allStoredSessions: ', allStoredSessions);
-  return allStoredSessions;
+  return allSessions;
 };
 
 const saveSession = async (session: Session) => {
-  //Update session names
-  const allStoredSessionNames = await getAllSessionNames();
-  const updatedStoredSessionNames = [...allStoredSessionNames, session.sequenceName];
-  await window.api.setStoreValue(SESSION_NAMES_KEY, JSON.stringify(updatedStoredSessionNames));
-
-  // Update session key
-  await window.api.setStoreValue(session.sequenceName, JSON.stringify(session));
+  await window.api.setCategoryStoreValue(SESSION_CATEGORY, session.id, JSON.stringify(session));
 };
 
 const deleteSession = async (session: Session) => {
-  // Update session names
-  const allStoredSessionNamesValue = await window.api.getStoreValue(SESSION_NAMES_KEY);
-  const allStoredSessionNames = allStoredSessionNamesValue
-    ? JSON.parse(allStoredSessionNamesValue)
-    : [];
-  const updatedStoredSessionNames = allStoredSessionNames.filter(
-    (name) => name !== session.sequenceName
-  );
-  await window.api.setStoreValue(SESSION_NAMES_KEY, JSON.stringify(updatedStoredSessionNames));
+  await window.api.deleteCategoryStoreValue(SESSION_CATEGORY, session.id);
+};
 
-  // Delete session key
-  await window.api.deleteStoreValue(session.sequenceName);
+// BUCKETS
+const getAllBuckets = async (): Promise<Bucket[]> => {
+  const allStoredBuckets: Bucket[] = [...PRELOADED_BUCKET];
+  const allCustomStoredBucketValues = await window.api.getAllCategoryStoreValues(BUCKET_CATEGORY);
+  const allCustomBuckets: Bucket[] = allCustomStoredBucketValues.map(
+    (bucketValue) => JSON.parse(bucketValue) as Bucket
+  );
+
+  const allBuckets = [...allStoredBuckets, ...allCustomBuckets];
+
+  return allBuckets;
+};
+
+const saveBucket = async (bucket: Bucket) => {
+  await window.api.setCategoryStoreValue(BUCKET_CATEGORY, bucket.id, JSON.stringify(bucket));
+};
+
+const deleteBucket = async (bucket: Bucket) => {
+  await window.api.deleteCategoryStoreValue(BUCKET_CATEGORY, bucket.id);
 };
 
 const storeService = {
@@ -112,6 +92,9 @@ const storeService = {
   getAllSessions,
   saveSession,
   deleteSession,
+  getAllBuckets,
+  saveBucket,
+  deleteBucket,
 };
 
 export default storeService;

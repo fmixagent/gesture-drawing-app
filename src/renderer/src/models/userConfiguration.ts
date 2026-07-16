@@ -1,3 +1,4 @@
+import { Bucket } from './bucket';
 import { Session } from './session';
 
 export class TimeStretch {
@@ -21,5 +22,6 @@ export const TIME_STRETCHS: TimeStretch[] = [
 export class UserConfiguration {
   timeStretchSelected?: TimeStretch;
   sessionSelected?: Session;
-  selectedFolder: string = ''; // Optional, can be undefined if not set
+  folderSelected?: string; // Optional, can be undefined if not set
+  bucketSelected?: Bucket;
 }

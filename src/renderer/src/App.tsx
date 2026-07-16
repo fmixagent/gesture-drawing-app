@@ -9,13 +9,20 @@ declare global {
       selectDirectory: () => Promise<string | null>;
       readDirFileNames: (path: string) => Promise<string[]>;
       isDirectory: (path: string) => boolean;
-      setStoreValue: (key: string, value: string) => Promise<void>;
+
       getStoreValue: (key: string) => Promise<string>;
+      setStoreValue: (key: string, value: string) => Promise<void>;
       deleteStoreValue: (key: string) => Promise<void>;
+
+      getCategoryStoreValue: (category: string, key: string) => Promise<string>;
+      setCategoryStoreValue: (category: string, key: string, value: string) => Promise<void>;
+      deleteCategoryStoreValue: (category: string, key: string) => Promise<void>;
+      getAllCategoryStoreValues: (category: string) => Promise<string[]>;
+      getPathForFile: (file: File) => string;
     };
   }
 }
-import { ArrowsFullscreen, Folder, FullscreenExit, GearFill } from 'react-bootstrap-icons';
+import { ArrowsFullscreen, Bucket, Folder, FullscreenExit, GearFill } from 'react-bootstrap-icons';
 import PlayerControls from './components/smart/player-controls/PlayerControls';
 import fsService from './service/fs-service';
 import CounterDisplay from './components/ui/counter-display/CounterDisplay';
@@ -25,13 +32,14 @@ import { UserConfiguration } from './models/userConfiguration';
 import storeService from './service/store-service';
 import ConfigurationPanel from './components/smart/configuration-panel/ConfigurationPanel';
 import SesssionProgression from './components/smart/session-progression/SessionProgression';
+import { BucketImage } from './models/bucket';
 
 const TIMEOUT_MOVING_DURATION = 3000;
 let TIMEOUT_ID: any;
 
 function App(): React.JSX.Element {
   const onTimerStart = (): void => {
-    showNewRandomImageFromFolder();
+    showNewRandomImage();
   };
 
   const {
@@ -116,12 +124,13 @@ function App(): React.JSX.Element {
   // Image management
   const [srcImage, setSrcImage] = React.useState<string>();
   const [imagePaths, setImagePaths] = React.useState<string[]>([]);
+  const [bucketImages, setBucketImages] = React.useState<BucketImage[]>([]);
   useEffect(() => {
     const fetchImages = async (): Promise<void> => {
-      if (!userConfiguration.selectedFolder) {
+      if (!userConfiguration.folderSelected) {
         return;
       }
-      const imagePaths = await fsService.getFilesFromDir(userConfiguration.selectedFolder);
+      const imagePaths = await fsService.getFilesFromDir(userConfiguration.folderSelected);
       setImagePaths(imagePaths);
     };
     fetchImages();
@@ -129,7 +138,18 @@ function App(): React.JSX.Element {
     return () => {
       setImagePaths([]);
     };
-  }, [userConfiguration.selectedFolder]);
+  }, [userConfiguration.folderSelected]);
+
+  useEffect(() => {
+    const bucketImages = userConfiguration.bucketSelected
+      ? userConfiguration.bucketSelected.images
+      : [];
+    setBucketImages(bucketImages);
+
+    return () => {
+      setBucketImages([]);
+    };
+  }, [userConfiguration.bucketSelected]);
 
   // Reset timer and image when time stretch changes
   useEffect(() => {
@@ -186,8 +206,15 @@ function App(): React.JSX.Element {
   // IMAGE MANAGEMENT
   const [imagesShown, setImagesShown] = React.useState<string[]>([]);
   const [imageShownIndex, setImageShownIndex] = React.useState<number>(-1);
-  const showNewRandomImageFromFolder = (): void => {
-    const imagePath = getRandomImageFromFolder();
+  const showNewRandomImage = (): void => {
+    // Is folder selected
+    let imagePath: string | undefined = undefined;
+    if (userConfiguration.folderSelected) {
+      imagePath = getRandomImageFromFolder();
+    }
+    if (userConfiguration.bucketSelected) {
+      imagePath = getRandomImageFromBucket();
+    }
     if (!imagePath) {
       setSrcImage(undefined);
       return;
@@ -198,8 +225,7 @@ function App(): React.JSX.Element {
   };
 
   const showImage = (imagePath: string): void => {
-    const fileUrl = 'atom:' + imagePath;
-    setSrcImage(fileUrl);
+    setSrcImage(imagePath);
   };
 
   const getRandomImageFromFolder = (): string | undefined => {
@@ -207,13 +233,23 @@ function App(): React.JSX.Element {
       return undefined; // Fallback to default logo if no images are available
     }
     const randomIndex = Math.floor(Math.random() * imagePaths.length);
-    const imagePath = imagePaths[randomIndex];
+    const imagePath = 'atom:' + imagePaths[randomIndex];
+    return imagePath;
+  };
+
+  const getRandomImageFromBucket = (): string | undefined => {
+    if (bucketImages.length === 0) {
+      return undefined; // Fallback to default logo if no images are available
+    }
+    const randomIndex = Math.floor(Math.random() * bucketImages.length);
+    const bucketImage: BucketImage = bucketImages[randomIndex];
+    const imagePath = bucketImage.url ?? 'atom:' + bucketImage.localPath;
     return imagePath;
   };
 
   const onNext = (): void => {
     if (imageShownIndex >= imagesShown.length - 1) {
-      showNewRandomImageFromFolder();
+      showNewRandomImage();
       return;
     }
 
@@ -324,13 +360,16 @@ function App(): React.JSX.Element {
         </div>
       ) : (
         <div className="flex h-full w-full items-center justify-center text-gray-500">
-          {!userConfiguration.selectedFolder ? (
+          {!userConfiguration.folderSelected && !userConfiguration.bucketSelected ? (
             <span>
-              In the userConfiguration panel select a folder with images to pick from there a random
-              one.
+              In the userConfiguration panel select a folder or bucket with images to pick from
+              there a random one.
             </span>
-          ) : imagePaths.length === 0 ? (
-            <span>The folder selected doesn&apos;t contain any image</span>
+          ) : imagePaths.length === 0 && bucketImages.length === 0 ? (
+            <span>
+              The {userConfiguration.folderSelected ? 'folder' : 'bucket'} selected doesn&apos;t
+              contain any image
+            </span>
           ) : (
             <div className="flex flex-col items-center justify-start gap-2">
               <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gray-500">
@@ -339,10 +378,10 @@ function App(): React.JSX.Element {
                     <path
                       d="m11.088 6.4845e-5c-1.5888-0.0087-3.1517 0.85829-4.0234 2.4434-0.46395 0.84355-0.46277 0.68337-1.125 2.0449-0.65479 1.3462-1.964 4.1844-5.0996 11.115-0.18349 0.32005-0.32898 0.65836-0.45508 1.0039l-0.02344 0.05469 0.0059 2e-3c-0.23026 0.64996-0.36719 1.3352-0.36719 2.0566 0 4.1314 4.0722 7.2366 8.8262 7.2129 4.3845-0.02184 8.1873-2.6985 8.752-6.3555h3.1621c0.56464 3.657 4.3675 6.3336 8.752 6.3555 4.754 0.02368 8.8262-3.0815 8.8262-7.2129 0-0.7214-0.13692-1.4067-0.36719-2.0566l0.0059-2e-3 -0.02344-0.05469c-0.1261-0.34555-0.27159-0.68385-0.45508-1.0039-3.1357-6.9308-4.4448-9.769-5.0996-11.115-0.66223-1.3616-0.66105-1.2014-1.125-2.0449-0.87179-1.5851-2.4346-2.4521-4.0234-2.4434-0.52962 0.0029-1.0613 0.10313-1.5723 0.30664-0.88467 0.35235-1.6022 1.087-1.9648 2.0352-0.36261 0.94818-0.28761 2.1722 0.49219 3.1758l0.04102 0.05469 1.2422-1.3594c-0.26978-0.44478-0.24591-0.83063-0.09375-1.2285 0.17463-0.45662 0.60199-0.86756 0.94922-1.0059 1.2476-0.4969 2.5694-0.08813 3.3516 1.334 0.50832 0.92422 0.44735 0.64995 1.0859 1.9629 0.49908 1.0261 1.4211 3.0191 3.334 7.2305-1.3534-0.68447-2.936-1.0776-4.6035-1.0859-4.3396-0.02161-8.1102 2.5647-8.7344 6.1582h-3.1973c-0.6242-3.5936-4.3948-6.1798-8.7344-6.1582-1.6675 0.0083-3.2501 0.40147-4.6035 1.0859 1.9129-4.2113 2.8349-6.2043 3.334-7.2305 0.63859-1.3129 0.57762-1.0387 1.0859-1.9629 0.78216-1.4221 2.1039-1.8309 3.3516-1.334 0.34723 0.13829 0.77459 0.54924 0.94922 1.0059 0.15216 0.39789 0.17603 0.78374-0.09375 1.2285l1.2422 1.3594 0.04102-0.05469c0.77979-1.0036 0.8548-2.2276 0.49219-3.1758-0.36261-0.94818-1.0802-1.6828-1.9648-2.0352-0.51098-0.20351-1.0426-0.30375-1.5723-0.30664zm-2.2617 13.42c3.8898-0.01937 6.8242 2.4451 6.8242 5.2246s-2.9344 5.2697-6.8242 5.2891c-3.8898 0.01937-6.8262-2.4432-6.8262-5.2227 0-2.7795 2.9363-5.2716 6.8262-5.291zm20.666 0c3.8898 0.01937 6.8262 2.5115 6.8262 5.291 0 2.7795-2.9363 5.242-6.8262 5.2227-3.8898-0.01937-6.8242-2.5096-6.8242-5.2891 0-2.7795 2.9344-5.244 6.8242-5.2246z"
                       fill="currentColor"
-                      stop-color="#000000"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width=".99999"
+                      stopColor="#000000"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth=".99999"
                     />
                   </svg>
                 </div>
@@ -355,18 +394,30 @@ function App(): React.JSX.Element {
               </div>
               <div className="w-70 py-10 text-center">
                 <p>
-                  Choose a folder with your samples images, choose your time stretches or session
-                  and <strong>just start drawing</strong>
+                  Choose a folder or bucket with your samples images, choose your time stretches or
+                  session and <strong>just start drawing</strong>
                 </p>
               </div>
 
-              <div className="flex flex-col items-center justify-center gap-1">
-                <div className="flex items-center justify-center gap-2 border-b border-dotted border-gray-600 pb-1">
-                  <Folder />
-                  <span>{userConfiguration.selectedFolder}</span>
+              {userConfiguration.folderSelected && (
+                <div className="flex flex-col items-center justify-center gap-1">
+                  <div className="flex items-center justify-center gap-2 border-b border-dotted border-gray-600 pb-1">
+                    <Folder />
+                    <span>{userConfiguration.folderSelected}</span>
+                  </div>
+                  <span className="font-bold">{imagePaths.length} photos</span>
                 </div>
-                <span className="font-bold">{imagePaths.length} photos</span>
-              </div>
+              )}
+
+              {userConfiguration.bucketSelected && (
+                <div className="flex flex-col items-center justify-center gap-1">
+                  <div className="flex items-center justify-center gap-2 border-b border-dotted border-gray-600 pb-1">
+                    <Bucket />
+                    <span>{userConfiguration.bucketSelected.name}</span>
+                  </div>
+                  <span className="font-bold">{bucketImages.length} photos</span>
+                </div>
+              )}
             </div>
           )}
         </div>
