@@ -41,7 +41,6 @@ const api = {
     return value;
   },
   setCategoryStoreValue: async (category: string, key: string, value: string): Promise<void> => {
-    console.log('//setCategoryStoreValue: ', category, key, value);
     await ipcRenderer.invoke('electron-store:setCategoryValue', category, key, value);
   },
   deleteCategoryStoreValue: async (category: string, key: string): Promise<void> => {
