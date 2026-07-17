@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { Upload } from 'react-bootstrap-icons';
 import ImageListViewer from './ImageListViewer';
-import { BucketImage } from '@renderer/models/bucket';
+import { ImageData } from '@renderer/models/imageData';
 
 // --- Typings & Constants ---
 enum DropStatusEnum {
@@ -12,12 +12,12 @@ enum DropStatusEnum {
 type DropStatus = `${DropStatusEnum}`;
 
 interface DragAndDropAreaProps {
-  initialImages?: BucketImage[];
-  onChange?: (images: BucketImage[]) => void;
+  initialImages?: ImageData[];
+  onChange?: (images: ImageData[]) => void;
 }
 
 const DragAndDropArea: React.FC<DragAndDropAreaProps> = ({ initialImages = [], onChange }) => {
-  const [images, setImages] = useState<BucketImage[]>(initialImages);
+  const [images, setImages] = useState<ImageData[]>(initialImages);
   const [dropStatus, setDropStatus] = useState<DropStatus>(DropStatusEnum.DEFAULT);
 
   useEffect(() => {
@@ -53,7 +53,7 @@ const DragAndDropArea: React.FC<DragAndDropAreaProps> = ({ initialImages = [], o
 
       const droppedFile = files[0];
 
-      let droppedImage: BucketImage;
+      let droppedImage: ImageData;
       if (imageUrl) {
         // File dropped from browser
         droppedImage = {
@@ -82,7 +82,7 @@ const DragAndDropArea: React.FC<DragAndDropAreaProps> = ({ initialImages = [], o
     return images.find((anImage) => anImage.name === imageName) ? true : false;
   };
 
-  const handleRemoveImage = (image: BucketImage) => {
+  const handleRemoveImage = (image: ImageData) => {
     setImages(images.filter((anImage) => anImage.name !== image.name));
   };
 
@@ -90,7 +90,7 @@ const DragAndDropArea: React.FC<DragAndDropAreaProps> = ({ initialImages = [], o
     const files: File[] = Array.from(ev.target.files!);
     if (files.length === 0) return;
 
-    const newImages: BucketImage[] = [];
+    const newImages: ImageData[] = [];
     for (const file of files) {
       const imageName = file.name;
       const filePath = window.api.getPathForFile(file);
