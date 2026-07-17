@@ -1,7 +1,7 @@
 import { ImageData } from '@renderer/models/imageData';
 import { UserConfiguration } from '@renderer/models/userConfiguration';
 import fsService from '@renderer/service/fs-service';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 type UseImagesShownProps = {
   images: ImageData[];
@@ -14,6 +14,7 @@ type UseImagesShownProps = {
 const useImagesShown = (userConfiguration: UserConfiguration): UseImagesShownProps => {
   // Images available
   const [images, setImages] = useState<ImageData[]>([]);
+  const [nonRepeatedImages, setNonRepeatedImages] = useState<ImageData[]>([]);
   // Images already shown
   const [imagesShown, setImagesShown] = useState<string[]>([]);
   // Actual image index
@@ -22,55 +23,72 @@ const useImagesShown = (userConfiguration: UserConfiguration): UseImagesShownPro
   const [srcImage, setSrcImage] = useState<string>('');
 
   useEffect(() => {
-    const recoverFolderImages = async (): Promise<void> => {
-      if (!userConfiguration.folderSelected) {
-        return;
-      }
-      const images: ImageData[] = await fsService.getFilesFromDir(userConfiguration.folderSelected);
-      setImages(images);
+    if (!userConfiguration) return;
+
+    const recoverFolderImages = async (folder: string): Promise<void> => {
+      const images: ImageData[] = await fsService.getFilesFromDir(folder);
+      initImages(images);
     };
-    recoverFolderImages();
+
+    if (userConfiguration.folderSelected) {
+      recoverFolderImages(userConfiguration.folderSelected);
+      return;
+    }
+
+    if (userConfiguration.bucketSelected) {
+      const images = userConfiguration.bucketSelected.images;
+      initImages(images);
+    }
 
     return () => {
       setImages([]);
+      setNonRepeatedImages([]);
     };
-  }, [userConfiguration.folderSelected]);
+  }, [userConfiguration]);
 
-  useEffect(() => {
-    const images = userConfiguration.bucketSelected ? userConfiguration.bucketSelected.images : [];
+  const initImages = (images: ImageData[]) => {
+    console.log('//INIT IMAGES: ', images);
+    setSrcImage('');
     setImages(images);
+    setNonRepeatedImages(images);
+    setImageShownIndex(-1);
+    setImagesShown([]);
+  };
 
-    return () => {
-      setImages([]);
-    };
-  }, [userConfiguration.bucketSelected]);
-
-  const showNewRandomImage = (): void => {
+  const showNewRandomImage = useCallback((): void => {
+    console.log('//ShowRANDOM: ', nonRepeatedImages);
     // Is folder selected
-    const imagePath: string | undefined = getRandomImage();
-    if (!imagePath) return;
+    const imageData: ImageData = getRandomImage(nonRepeatedImages);
+    if (!imageData) return;
+    const imagePath = imageData.url ?? 'atom:' + imageData.localPath;
 
+    // Update used images
+    const updateNonRepeatedImages = nonRepeatedImages.filter(
+      (anImageData) => anImageData.name !== imageData.name
+    );
+    updateNonRepeatedImages.length === 0
+      ? setNonRepeatedImages(images)
+      : setNonRepeatedImages([...updateNonRepeatedImages]);
+
+    // Show image (path)
     showImage(imagePath);
     setImagesShown((prev) => [...prev, imagePath]);
     setImageShownIndex((prev) => prev + 1);
-  };
+  }, [nonRepeatedImages]);
 
   const showImage = (imagePath: string): void => {
     setSrcImage(imagePath);
   };
 
-  const getRandomImage = (): string | undefined => {
-    if (images.length === 0) {
-      return undefined; // Fallback to default logo if no images are available
-    }
+  const getRandomImage = (images: ImageData[]): ImageData => {
     const randomIndex = Math.floor(Math.random() * images.length);
     const imageData: ImageData = images[randomIndex];
-    const imagePath = imageData.url ?? 'atom:' + imageData.localPath;
-    return imagePath;
+    return imageData;
   };
 
   const onNext = (): void => {
-    if (imageShownIndex >= imagesShown.length - 1) {
+    console.log('//SHOW NEXT: ', imageShownIndex);
+    if (!imagesShown || imagesShown.length === 0 || imageShownIndex >= imagesShown.length - 1) {
       showNewRandomImage();
       return;
     }
@@ -78,6 +96,7 @@ const useImagesShown = (userConfiguration: UserConfiguration): UseImagesShownPro
     const newIndex = imageShownIndex + 1;
     setImageShownIndex(newIndex);
     const nextImage = imagesShown[newIndex];
+    console.log('////SHOW IMAGE: ', nextImage);
     showImage(nextImage); // Show the next image;
   };
 
@@ -93,7 +112,11 @@ const useImagesShown = (userConfiguration: UserConfiguration): UseImagesShownPro
   };
 
   const resetSrcImage = (): void => {
+    // console.log('///SET IMAGES:', images);
     setSrcImage('');
+    // setNonRepeatedImages(images);
+    // setImageShownIndex(0);
+    // setImagesShown([]);
   };
 
   return {

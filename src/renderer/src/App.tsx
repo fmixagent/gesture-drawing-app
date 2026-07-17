@@ -37,7 +37,14 @@ const TIMEOUT_MOVING_DURATION = 3000;
 let TIMEOUT_ID: any;
 
 function App(): React.JSX.Element {
+  const [userConfiguration, setUserConfiguration] = React.useState<UserConfiguration>(
+    new UserConfiguration()
+  );
+  // Image management
+  const { images, srcImage, resetSrcImage, onPrevious, onNext } = useImagesShown(userConfiguration);
+
   const onTimerStart = (): void => {
+    console.log('onTimerStart///', JSON.stringify(userConfiguration));
     onNext();
   };
 
@@ -77,9 +84,6 @@ function App(): React.JSX.Element {
   };
 
   // UserConfiguration management
-  const [userConfiguration, setUserConfiguration] = React.useState<UserConfiguration>(
-    new UserConfiguration()
-  );
   useEffect(() => {
     const storedUserConfig = async (): Promise<void> => {
       const userConfig = await storeService.getUserConfig();
@@ -95,13 +99,10 @@ function App(): React.JSX.Element {
     setIsConfigurationPanelOpen((prev) => !prev);
   };
   const onChangeConfiguration = (newConfiguration: UserConfiguration): void => {
+    console.log('//STORED CONFIG CHANGED: ', newConfiguration);
     setUserConfiguration(newConfiguration);
     storeService.setUserConfig(newConfiguration);
-    stopTimer();
   };
-
-  // Image management
-  const { images, srcImage, resetSrcImage, onPrevious, onNext } = useImagesShown(userConfiguration);
 
   // Player controls management
   const onPlayTImer = (): void => {
@@ -123,13 +124,25 @@ function App(): React.JSX.Element {
         );
   };
 
+  useEffect(() => {
+    if (!userConfiguration.folderSelected) return;
+
+    stopTimer({ resetTimer: true });
+  }, [userConfiguration.folderSelected]);
+
+  useEffect(() => {
+    if (!userConfiguration.bucketSelected) return;
+
+    stopTimer({ resetTimer: true });
+  }, [userConfiguration.bucketSelected]);
+
   // Reset timer and image when time stretch changes
   useEffect(() => {
     if (!userConfiguration.timeStretchSelected) return;
 
+    stopTimer({ resetTimer: true });
     resetTimer(userConfiguration.timeStretchSelected.duration);
     setIsInfiniteLoop(true);
-    resetSrcImage();
   }, [userConfiguration.timeStretchSelected]);
 
   // Reset timer and image when time stretch changes
@@ -137,9 +150,9 @@ function App(): React.JSX.Element {
   useEffect(() => {
     if (!userConfiguration.sessionSelected) return;
 
+    stopTimer({ resetTimer: true });
     resetTimer(userConfiguration.sessionSelected.sequence[currentSessionStretchIndex].duration);
     setIsInfiniteLoop(false);
-    resetSrcImage();
   }, [userConfiguration.sessionSelected]);
 
   // Session management
