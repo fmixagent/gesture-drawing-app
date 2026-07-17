@@ -22,7 +22,7 @@ declare global {
     };
   }
 }
-import { ArrowsFullscreen, Bucket, Folder, FullscreenExit, GearFill } from 'react-bootstrap-icons';
+import { ArrowsFullscreen, Folder, FullscreenExit, GearFill } from 'react-bootstrap-icons';
 import PlayerControls from './components/smart/player-controls/PlayerControls';
 import fsService from './service/fs-service';
 import CounterDisplay from './components/ui/counter-display/CounterDisplay';
@@ -32,7 +32,7 @@ import { UserConfiguration } from './models/userConfiguration';
 import storeService from './service/store-service';
 import ConfigurationPanel from './components/smart/configuration-panel/ConfigurationPanel';
 import SesssionProgression from './components/smart/session-progression/SessionProgression';
-import { BucketImage } from './models/bucket';
+import { ImageData } from './models/imageData';
 
 const TIMEOUT_MOVING_DURATION = 3000;
 let TIMEOUT_ID: any;
@@ -123,31 +123,28 @@ function App(): React.JSX.Element {
 
   // Image management
   const [srcImage, setSrcImage] = React.useState<string>();
-  const [imagePaths, setImagePaths] = React.useState<string[]>([]);
-  const [bucketImages, setBucketImages] = React.useState<BucketImage[]>([]);
+  const [images, setImages] = React.useState<ImageData[]>([]);
   useEffect(() => {
     const fetchImages = async (): Promise<void> => {
       if (!userConfiguration.folderSelected) {
         return;
       }
-      const imagePaths = await fsService.getFilesFromDir(userConfiguration.folderSelected);
-      setImagePaths(imagePaths);
+      const images: ImageData[] = await fsService.getFilesFromDir(userConfiguration.folderSelected);
+      setImages(images);
     };
     fetchImages();
 
     return () => {
-      setImagePaths([]);
+      setImages([]);
     };
   }, [userConfiguration.folderSelected]);
 
   useEffect(() => {
-    const bucketImages = userConfiguration.bucketSelected
-      ? userConfiguration.bucketSelected.images
-      : [];
-    setBucketImages(bucketImages);
+    const images = userConfiguration.bucketSelected ? userConfiguration.bucketSelected.images : [];
+    setImages(images);
 
     return () => {
-      setBucketImages([]);
+      setImages([]);
     };
   }, [userConfiguration.bucketSelected]);
 
@@ -210,10 +207,10 @@ function App(): React.JSX.Element {
     // Is folder selected
     let imagePath: string | undefined = undefined;
     if (userConfiguration.folderSelected) {
-      imagePath = getRandomImageFromFolder();
+      imagePath = getRandomImage();
     }
     if (userConfiguration.bucketSelected) {
-      imagePath = getRandomImageFromBucket();
+      imagePath = getRandomImage();
     }
     if (!imagePath) {
       setSrcImage(undefined);
@@ -228,22 +225,13 @@ function App(): React.JSX.Element {
     setSrcImage(imagePath);
   };
 
-  const getRandomImageFromFolder = (): string | undefined => {
-    if (imagePaths.length === 0) {
+  const getRandomImage = (): string | undefined => {
+    if (images.length === 0) {
       return undefined; // Fallback to default logo if no images are available
     }
-    const randomIndex = Math.floor(Math.random() * imagePaths.length);
-    const imagePath = 'atom:' + imagePaths[randomIndex];
-    return imagePath;
-  };
-
-  const getRandomImageFromBucket = (): string | undefined => {
-    if (bucketImages.length === 0) {
-      return undefined; // Fallback to default logo if no images are available
-    }
-    const randomIndex = Math.floor(Math.random() * bucketImages.length);
-    const bucketImage: BucketImage = bucketImages[randomIndex];
-    const imagePath = bucketImage.url ?? 'atom:' + bucketImage.localPath;
+    const randomIndex = Math.floor(Math.random() * images.length);
+    const imageData: ImageData = images[randomIndex];
+    const imagePath = imageData.url ?? 'atom:' + imageData.localPath;
     return imagePath;
   };
 
@@ -365,7 +353,7 @@ function App(): React.JSX.Element {
               In the userConfiguration panel select a folder or bucket with images to pick from
               there a random one.
             </span>
-          ) : imagePaths.length === 0 && bucketImages.length === 0 ? (
+          ) : images.length === 0 ? (
             <span>
               The {userConfiguration.folderSelected ? 'folder' : 'bucket'} selected doesn&apos;t
               contain any image
@@ -399,23 +387,15 @@ function App(): React.JSX.Element {
                 </p>
               </div>
 
-              {userConfiguration.folderSelected && (
+              {(userConfiguration.folderSelected || userConfiguration.bucketSelected) && (
                 <div className="flex flex-col items-center justify-center gap-1">
                   <div className="flex items-center justify-center gap-2 border-b border-dotted border-gray-600 pb-1">
                     <Folder />
-                    <span>{userConfiguration.folderSelected}</span>
+                    <span>
+                      {userConfiguration.folderSelected ?? userConfiguration.bucketSelected?.name}
+                    </span>
                   </div>
-                  <span className="font-bold">{imagePaths.length} photos</span>
-                </div>
-              )}
-
-              {userConfiguration.bucketSelected && (
-                <div className="flex flex-col items-center justify-center gap-1">
-                  <div className="flex items-center justify-center gap-2 border-b border-dotted border-gray-600 pb-1">
-                    <Bucket />
-                    <span>{userConfiguration.bucketSelected.name}</span>
-                  </div>
-                  <span className="font-bold">{bucketImages.length} photos</span>
+                  <span className="font-bold">{images.length} photos</span>
                 </div>
               )}
             </div>
