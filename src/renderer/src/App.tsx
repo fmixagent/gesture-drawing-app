@@ -24,7 +24,6 @@ declare global {
 }
 import { ArrowsFullscreen, Folder, FullscreenExit, GearFill } from 'react-bootstrap-icons';
 import PlayerControls from './components/smart/player-controls/PlayerControls';
-import fsService from './service/fs-service';
 import CounterDisplay from './components/ui/counter-display/CounterDisplay';
 import useCountdownTimer from './hooks/use-countdown-counter';
 import CircularProgressBar from './components/ui/circular-progress-bar/CircularProgressBar';
@@ -32,14 +31,21 @@ import { UserConfiguration } from './models/userConfiguration';
 import storeService from './service/store-service';
 import ConfigurationPanel from './components/smart/configuration-panel/ConfigurationPanel';
 import SesssionProgression from './components/smart/session-progression/SessionProgression';
-import { ImageData } from './models/imageData';
+import useImagesShown from './hooks/use-images-shown';
 
 const TIMEOUT_MOVING_DURATION = 3000;
 let TIMEOUT_ID: any;
 
 function App(): React.JSX.Element {
+  const [userConfiguration, setUserConfiguration] = React.useState<UserConfiguration>(
+    new UserConfiguration()
+  );
+  // Image management
+  const { images, srcImage, resetSrcImage, onPrevious, onNext } = useImagesShown(userConfiguration);
+
   const onTimerStart = (): void => {
-    showNewRandomImage();
+    console.log('onTimerStart///', JSON.stringify(userConfiguration));
+    onNext();
   };
 
   const {
@@ -78,9 +84,6 @@ function App(): React.JSX.Element {
   };
 
   // UserConfiguration management
-  const [userConfiguration, setUserConfiguration] = React.useState<UserConfiguration>(
-    new UserConfiguration()
-  );
   useEffect(() => {
     const storedUserConfig = async (): Promise<void> => {
       const userConfig = await storeService.getUserConfig();
@@ -96,9 +99,9 @@ function App(): React.JSX.Element {
     setIsConfigurationPanelOpen((prev) => !prev);
   };
   const onChangeConfiguration = (newConfiguration: UserConfiguration): void => {
+    console.log('//STORED CONFIG CHANGED: ', newConfiguration);
     setUserConfiguration(newConfiguration);
     storeService.setUserConfig(newConfiguration);
-    stopTimer();
   };
 
   // Player controls management
@@ -111,7 +114,7 @@ function App(): React.JSX.Element {
   const onStopTimer = (): void => {
     setCurrentSessionStretchIndex(0);
     setSessionProgressInSeconds(0);
-    setSrcImage(undefined);
+    resetSrcImage();
     userConfiguration.timeStretchSelected
       ? resetTimer(userConfiguration.timeStretchSelected.duration)
       : resetTimer(
@@ -121,40 +124,25 @@ function App(): React.JSX.Element {
         );
   };
 
-  // Image management
-  const [srcImage, setSrcImage] = React.useState<string>();
-  const [images, setImages] = React.useState<ImageData[]>([]);
   useEffect(() => {
-    const fetchImages = async (): Promise<void> => {
-      if (!userConfiguration.folderSelected) {
-        return;
-      }
-      const images: ImageData[] = await fsService.getFilesFromDir(userConfiguration.folderSelected);
-      setImages(images);
-    };
-    fetchImages();
+    if (!userConfiguration.folderSelected) return;
 
-    return () => {
-      setImages([]);
-    };
+    stopTimer({ resetTimer: true });
   }, [userConfiguration.folderSelected]);
 
   useEffect(() => {
-    const images = userConfiguration.bucketSelected ? userConfiguration.bucketSelected.images : [];
-    setImages(images);
+    if (!userConfiguration.bucketSelected) return;
 
-    return () => {
-      setImages([]);
-    };
+    stopTimer({ resetTimer: true });
   }, [userConfiguration.bucketSelected]);
 
   // Reset timer and image when time stretch changes
   useEffect(() => {
     if (!userConfiguration.timeStretchSelected) return;
 
+    stopTimer({ resetTimer: true });
     resetTimer(userConfiguration.timeStretchSelected.duration);
     setIsInfiniteLoop(true);
-    setSrcImage(undefined);
   }, [userConfiguration.timeStretchSelected]);
 
   // Reset timer and image when time stretch changes
@@ -162,9 +150,9 @@ function App(): React.JSX.Element {
   useEffect(() => {
     if (!userConfiguration.sessionSelected) return;
 
+    stopTimer({ resetTimer: true });
     resetTimer(userConfiguration.sessionSelected.sequence[currentSessionStretchIndex].duration);
     setIsInfiniteLoop(false);
-    setSrcImage(undefined);
   }, [userConfiguration.sessionSelected]);
 
   // Session management
@@ -200,63 +188,7 @@ function App(): React.JSX.Element {
     }
   }, [timer]);
 
-  // IMAGE MANAGEMENT
-  const [imagesShown, setImagesShown] = React.useState<string[]>([]);
-  const [imageShownIndex, setImageShownIndex] = React.useState<number>(-1);
-  const showNewRandomImage = (): void => {
-    // Is folder selected
-    let imagePath: string | undefined = undefined;
-    if (userConfiguration.folderSelected) {
-      imagePath = getRandomImage();
-    }
-    if (userConfiguration.bucketSelected) {
-      imagePath = getRandomImage();
-    }
-    if (!imagePath) {
-      setSrcImage(undefined);
-      return;
-    }
-    showImage(imagePath);
-    setImagesShown((prev) => [...prev, imagePath]);
-    setImageShownIndex((prev) => prev + 1);
-  };
-
-  const showImage = (imagePath: string): void => {
-    setSrcImage(imagePath);
-  };
-
-  const getRandomImage = (): string | undefined => {
-    if (images.length === 0) {
-      return undefined; // Fallback to default logo if no images are available
-    }
-    const randomIndex = Math.floor(Math.random() * images.length);
-    const imageData: ImageData = images[randomIndex];
-    const imagePath = imageData.url ?? 'atom:' + imageData.localPath;
-    return imagePath;
-  };
-
-  const onNext = (): void => {
-    if (imageShownIndex >= imagesShown.length - 1) {
-      showNewRandomImage();
-      return;
-    }
-
-    const newIndex = imageShownIndex + 1;
-    setImageShownIndex(newIndex);
-    const nextImage = imagesShown[newIndex];
-    showImage(nextImage); // Show the next image;
-  };
-
-  const onPrevious = (): void => {
-    if (imageShownIndex <= 0) {
-      return;
-    }
-
-    const newIndex = imageShownIndex - 1;
-    setImageShownIndex(newIndex);
-    const previousImage = imagesShown[newIndex];
-    showImage(previousImage); // Show the previous image
-  };
+  // PLAYER CONTROLS
   const [showPlayerControls, setShowPlayerControls] = React.useState<boolean>(true);
 
   const onMouseMove = (): void => {

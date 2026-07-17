@@ -19,7 +19,7 @@ type UseCountdownTimerProps = {
   resetTimerWithoutStopping: (duration: number) => void;
 };
 
-const useCountdownTimer = (onTimerStart?: () => void): UseCountdownTimerProps => {
+const useCountdownTimer = (onTimerStart: () => void): UseCountdownTimerProps => {
   const [isInfiniteLoop, setIsInfiniteLoop] = useState(false);
   const [countdownTime, setCountdownTime] = useState(DEFAULT_COUNTDOWN_TIME);
   const [timer, setTimer] = useState(DEFAULT_COUNTDOWN_TIME);
@@ -27,6 +27,7 @@ const useCountdownTimer = (onTimerStart?: () => void): UseCountdownTimerProps =>
   const [timerIinterval, setTimerInterval] = useState<NodeJS.Timeout | null>(null);
 
   const decrementTimer = (): void => {
+    console.log('////decrementTimer');
     if (!timer) return;
     setTimer((prev) => {
       if (prev <= 0) {
@@ -36,13 +37,14 @@ const useCountdownTimer = (onTimerStart?: () => void): UseCountdownTimerProps =>
         return 0; // Stop at 0
       }
       if (prev === countdownTime && isInfiniteLoop) {
-        onTimerStart?.(); // Trigger callback when timer starts
+        onTimerStart(); // Trigger callback when timer starts
       }
       return prev - 1;
     });
   };
 
   const startTimer = (): void => {
+    console.log('////startTimer');
     if (timerIinterval) clearInterval(timerIinterval);
     const interval = setInterval(() => {
       decrementTimer();
@@ -81,7 +83,7 @@ const useCountdownTimer = (onTimerStart?: () => void): UseCountdownTimerProps =>
   const resetTimerWithoutStopping = (duration: number): void => {
     setCountdownTime(duration);
     setTimer(duration); // Reset to initial time or default
-  }
+  };
 
   return {
     timer,
@@ -93,7 +95,7 @@ const useCountdownTimer = (onTimerStart?: () => void): UseCountdownTimerProps =>
     pauseTimer,
     stopTimer,
     resetTimer,
-    resetTimerWithoutStopping
+    resetTimerWithoutStopping,
   };
 };
 
