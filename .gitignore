@@ -1,5 +1,6 @@
 node_modules
 dist
+distPWA
 out
 .DS_Store
 .eslintcache
