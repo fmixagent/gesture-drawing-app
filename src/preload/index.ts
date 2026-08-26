@@ -5,8 +5,10 @@ import path from 'path';
 
 // Custom APIs for renderer
 const api = {
-  onEnterFullscreen: (callback) => ipcRenderer.on('enter-full-screen', () => callback()),
-  onLeaveFullscreen: (callback) => ipcRenderer.on('leave-full-screen', () => callback()),
+  // goFullscreen: () => ipcRenderer.send('goFullscreen'),
+  // exitFullscreen: () => ipcRenderer.send('exitFullscreen'),
+  // onEnterFullscreen: (callback) => ipcRenderer.on('enter-full-screen', () => callback()),
+  // onLeaveFullscreen: (callback) => ipcRenderer.on('leave-full-screen', () => callback()),
   selectDirectory: async (): Promise<string | null> => {
     const result = await ipcRenderer.invoke('selectDirectory');
     return result ? result : null;

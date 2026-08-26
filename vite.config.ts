@@ -13,6 +13,13 @@ export default defineConfig(({ mode }) => {
         include: '**/*.tsx',
       }),
     ],
+    resolve: {
+      alias: {
+        // 2. Map the '@' symbol to the absolute path of your 'src' folder
+        '@': resolve(__dirname, './src'),
+        '@renderer': resolve(__dirname, './src/renderer/src'),
+      },
+    },
     esbuild: {
       pure: mode === 'production' ? ['console.log'] : [],
     },

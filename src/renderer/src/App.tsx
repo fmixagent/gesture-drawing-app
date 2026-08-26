@@ -4,6 +4,8 @@ import React, { useEffect } from 'react';
 declare global {
   interface Window {
     api: {
+      goFullscreen: () => void;
+      exitFullscreen: () => void;
       onEnterFullscreen: (callback: () => void) => void;
       onLeaveFullscreen: (callback: () => void) => void;
       selectDirectory: () => Promise<string | null>;
@@ -32,6 +34,7 @@ import storeService from './service/store-service';
 import ConfigurationPanel from './components/smart/configuration-panel/ConfigurationPanel';
 import SesssionProgression from './components/smart/session-progression/SessionProgression';
 import useImagesShown from './hooks/use-images-shown';
+import useFullscreen from './hooks/use-fullscreen';
 
 const TIMEOUT_MOVING_DURATION = 3000;
 let TIMEOUT_ID: any;
@@ -61,27 +64,9 @@ function App(): React.JSX.Element {
   } = useCountdownTimer(onTimerStart);
 
   // Listen for fullscreen events via Electron IPC if needed
-  React.useEffect(() => {
-    window.api.onEnterFullscreen(() => {
-      setIsFullscreen(true);
-    });
-    window.api.onLeaveFullscreen(() => {
-      setIsFullscreen(false);
-    });
-  }, []);
 
   // Fullscreen management
-  const [isFullscreen, setIsFullscreen] = React.useState<boolean>(false);
-
-  const onIpcFullscreen = (): void => {
-    if (isFullscreen) {
-      window.electron.ipcRenderer.send('exitfullscreen');
-      setIsFullscreen(false);
-      return;
-    }
-    window.electron.ipcRenderer.send('gofullscreen');
-    setIsFullscreen(true);
-  };
+  const { isFullscreen, onToggleFullscreen } = useFullscreen();
 
   // UserConfiguration management
   useEffect(() => {
@@ -219,7 +204,7 @@ function App(): React.JSX.Element {
         type="button"
         className="absolute top-2 left-2 z-10 flex h-10 w-10 cursor-pointer items-center justify-center rounded-md bg-gray-800 text-gray-200 opacity-40 shadow duration-300 ease-in-out hover:bg-gray-700 hover:opacity-100"
         onClick={onToggleConfigurationPanel}
-        title={`${isFullscreen ? 'Exit Fullscreen' : 'Go Fullscreen'}`}
+        title={`${isConfigurationPanelOpen ? 'Close sidebar' : 'Open sidebar'}`}
       >
         <GearFill className="h-5 w-5" />
       </button>
@@ -245,7 +230,7 @@ function App(): React.JSX.Element {
       <button
         type="button"
         className="transtion absolute top-2 right-2 z-10 flex h-10 w-10 cursor-pointer items-center justify-center rounded-md bg-gray-800 text-gray-200 opacity-40 shadow duration-300 ease-in-out hover:bg-gray-700 hover:opacity-100"
-        onClick={onIpcFullscreen}
+        onClick={onToggleFullscreen}
         title={`${isFullscreen ? 'Exit Fullscreen' : 'Go Fullscreen'}`}
       >
         {isFullscreen ? (
