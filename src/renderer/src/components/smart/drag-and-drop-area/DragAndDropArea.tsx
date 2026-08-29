@@ -2,6 +2,7 @@ import React, { useState, useCallback, useEffect } from 'react';
 import { Upload } from 'react-bootstrap-icons';
 import ImageListViewer from './ImageListViewer';
 import { ImageData } from '@renderer/models/imageData';
+import droppedFileService from '@renderer/service/dropped-file-service';
 
 // --- Typings & Constants ---
 enum DropStatusEnum {
@@ -62,11 +63,7 @@ const DragAndDropArea: React.FC<DragAndDropAreaProps> = ({ initialImages = [], o
         };
       } else {
         // File from system
-        const filePath = window.api.getPathForFile(droppedFile);
-        droppedImage = {
-          name: droppedFile.name,
-          localPath: filePath,
-        };
+        droppedImage = droppedFileService.getImageDataFromFile(droppedFile);
       }
 
       // Check if already exists in the list
@@ -92,15 +89,9 @@ const DragAndDropArea: React.FC<DragAndDropAreaProps> = ({ initialImages = [], o
 
     const newImages: ImageData[] = [];
     for (const file of files) {
-      const imageName = file.name;
-      const filePath = window.api.getPathForFile(file);
       const imageAlreadyExists = checkIfImageAlreadyExists(file.name);
       if (!imageAlreadyExists) {
-        const newImage = {
-          name: imageName,
-          localPath: filePath,
-        };
-        newImages.push(newImage);
+        newImages.push(droppedFileService.getImageDataFromFile(file));
       }
     }
     setImages([...images, ...newImages]);
