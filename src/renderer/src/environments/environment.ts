@@ -1,3 +1,3 @@
 export const environment = {
-  webVersion: false,
+  webVersion: import.meta.env.WEB_VERSION === 'true',
 };

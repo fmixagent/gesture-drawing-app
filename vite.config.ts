@@ -23,6 +23,9 @@ export default defineConfig(({ mode }) => {
     esbuild: {
       pure: mode === 'production' ? ['console.log'] : [],
     },
+    define: {
+      'import.meta.env.WEB_VERSION': JSON.stringify(env.WEB_VERSION),
+    },
     build: {
       outDir: resolve(__dirname, 'distPWA'),
       emptyOutDir: true,
