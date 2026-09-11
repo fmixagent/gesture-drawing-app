@@ -85,11 +85,11 @@ app.whenReady().then(() => {
   // IPC test
   ipcMain.on('ping', () => console.log('pong'));
 
-  ipcMain.on('gofullscreen', () => {
+  ipcMain.on('goFullscreen', () => {
     BrowserWindow.getFocusedWindow()?.setFullScreen(true);
   });
 
-  ipcMain.on('exitfullscreen', () => {
+  ipcMain.on('exitFullscreen', () => {
     BrowserWindow.getFocusedWindow()?.setFullScreen(false);
   });
 

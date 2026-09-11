@@ -4,6 +4,8 @@ import React, { useEffect } from 'react';
 declare global {
   interface Window {
     api: {
+      goFullscreen: () => void;
+      exitFullscreen: () => void;
       onEnterFullscreen: (callback: () => void) => void;
       onLeaveFullscreen: (callback: () => void) => void;
       selectDirectory: () => Promise<string | null>;
@@ -22,9 +24,8 @@ declare global {
     };
   }
 }
-import { ArrowsFullscreen, Bucket, Folder, FullscreenExit, GearFill } from 'react-bootstrap-icons';
+import { ArrowsFullscreen, Folder, FullscreenExit, GearFill } from 'react-bootstrap-icons';
 import PlayerControls from './components/smart/player-controls/PlayerControls';
-import fsService from './service/fs-service';
 import CounterDisplay from './components/ui/counter-display/CounterDisplay';
 import useCountdownTimer from './hooks/use-countdown-counter';
 import CircularProgressBar from './components/ui/circular-progress-bar/CircularProgressBar';
@@ -32,14 +33,22 @@ import { UserConfiguration } from './models/userConfiguration';
 import storeService from './service/store-service';
 import ConfigurationPanel from './components/smart/configuration-panel/ConfigurationPanel';
 import SesssionProgression from './components/smart/session-progression/SessionProgression';
-import { BucketImage } from './models/bucket';
+import useImagesShown from './hooks/use-images-shown';
+import useFullscreen from './hooks/use-fullscreen';
 
 const TIMEOUT_MOVING_DURATION = 3000;
 let TIMEOUT_ID: any;
 
 function App(): React.JSX.Element {
+  const [userConfiguration, setUserConfiguration] = React.useState<UserConfiguration>(
+    new UserConfiguration()
+  );
+  // Image management
+  const { images, srcImage, resetSrcImage, onPrevious, onNext } = useImagesShown(userConfiguration);
+
   const onTimerStart = (): void => {
-    showNewRandomImage();
+    console.log('onTimerStart///', JSON.stringify(userConfiguration));
+    onNext();
   };
 
   const {
@@ -55,32 +64,11 @@ function App(): React.JSX.Element {
   } = useCountdownTimer(onTimerStart);
 
   // Listen for fullscreen events via Electron IPC if needed
-  React.useEffect(() => {
-    window.api.onEnterFullscreen(() => {
-      setIsFullscreen(true);
-    });
-    window.api.onLeaveFullscreen(() => {
-      setIsFullscreen(false);
-    });
-  }, []);
 
   // Fullscreen management
-  const [isFullscreen, setIsFullscreen] = React.useState<boolean>(false);
-
-  const onIpcFullscreen = (): void => {
-    if (isFullscreen) {
-      window.electron.ipcRenderer.send('exitfullscreen');
-      setIsFullscreen(false);
-      return;
-    }
-    window.electron.ipcRenderer.send('gofullscreen');
-    setIsFullscreen(true);
-  };
+  const { isFullscreen, onToggleFullscreen } = useFullscreen();
 
   // UserConfiguration management
-  const [userConfiguration, setUserConfiguration] = React.useState<UserConfiguration>(
-    new UserConfiguration()
-  );
   useEffect(() => {
     const storedUserConfig = async (): Promise<void> => {
       const userConfig = await storeService.getUserConfig();
@@ -96,9 +84,9 @@ function App(): React.JSX.Element {
     setIsConfigurationPanelOpen((prev) => !prev);
   };
   const onChangeConfiguration = (newConfiguration: UserConfiguration): void => {
+    console.log('//STORED CONFIG CHANGED: ', newConfiguration);
     setUserConfiguration(newConfiguration);
     storeService.setUserConfig(newConfiguration);
-    stopTimer();
   };
 
   // Player controls management
@@ -111,7 +99,7 @@ function App(): React.JSX.Element {
   const onStopTimer = (): void => {
     setCurrentSessionStretchIndex(0);
     setSessionProgressInSeconds(0);
-    setSrcImage(undefined);
+    resetSrcImage();
     userConfiguration.timeStretchSelected
       ? resetTimer(userConfiguration.timeStretchSelected.duration)
       : resetTimer(
@@ -121,43 +109,25 @@ function App(): React.JSX.Element {
         );
   };
 
-  // Image management
-  const [srcImage, setSrcImage] = React.useState<string>();
-  const [imagePaths, setImagePaths] = React.useState<string[]>([]);
-  const [bucketImages, setBucketImages] = React.useState<BucketImage[]>([]);
   useEffect(() => {
-    const fetchImages = async (): Promise<void> => {
-      if (!userConfiguration.folderSelected) {
-        return;
-      }
-      const imagePaths = await fsService.getFilesFromDir(userConfiguration.folderSelected);
-      setImagePaths(imagePaths);
-    };
-    fetchImages();
+    if (!userConfiguration.folderSelected) return;
 
-    return () => {
-      setImagePaths([]);
-    };
+    stopTimer({ resetTimer: true });
   }, [userConfiguration.folderSelected]);
 
   useEffect(() => {
-    const bucketImages = userConfiguration.bucketSelected
-      ? userConfiguration.bucketSelected.images
-      : [];
-    setBucketImages(bucketImages);
+    if (!userConfiguration.bucketSelected) return;
 
-    return () => {
-      setBucketImages([]);
-    };
+    stopTimer({ resetTimer: true });
   }, [userConfiguration.bucketSelected]);
 
   // Reset timer and image when time stretch changes
   useEffect(() => {
     if (!userConfiguration.timeStretchSelected) return;
 
+    stopTimer({ resetTimer: true });
     resetTimer(userConfiguration.timeStretchSelected.duration);
     setIsInfiniteLoop(true);
-    setSrcImage(undefined);
   }, [userConfiguration.timeStretchSelected]);
 
   // Reset timer and image when time stretch changes
@@ -165,9 +135,9 @@ function App(): React.JSX.Element {
   useEffect(() => {
     if (!userConfiguration.sessionSelected) return;
 
+    stopTimer({ resetTimer: true });
     resetTimer(userConfiguration.sessionSelected.sequence[currentSessionStretchIndex].duration);
     setIsInfiniteLoop(false);
-    setSrcImage(undefined);
   }, [userConfiguration.sessionSelected]);
 
   // Session management
@@ -203,72 +173,7 @@ function App(): React.JSX.Element {
     }
   }, [timer]);
 
-  // IMAGE MANAGEMENT
-  const [imagesShown, setImagesShown] = React.useState<string[]>([]);
-  const [imageShownIndex, setImageShownIndex] = React.useState<number>(-1);
-  const showNewRandomImage = (): void => {
-    // Is folder selected
-    let imagePath: string | undefined = undefined;
-    if (userConfiguration.folderSelected) {
-      imagePath = getRandomImageFromFolder();
-    }
-    if (userConfiguration.bucketSelected) {
-      imagePath = getRandomImageFromBucket();
-    }
-    if (!imagePath) {
-      setSrcImage(undefined);
-      return;
-    }
-    showImage(imagePath);
-    setImagesShown((prev) => [...prev, imagePath]);
-    setImageShownIndex((prev) => prev + 1);
-  };
-
-  const showImage = (imagePath: string): void => {
-    setSrcImage(imagePath);
-  };
-
-  const getRandomImageFromFolder = (): string | undefined => {
-    if (imagePaths.length === 0) {
-      return undefined; // Fallback to default logo if no images are available
-    }
-    const randomIndex = Math.floor(Math.random() * imagePaths.length);
-    const imagePath = 'atom:' + imagePaths[randomIndex];
-    return imagePath;
-  };
-
-  const getRandomImageFromBucket = (): string | undefined => {
-    if (bucketImages.length === 0) {
-      return undefined; // Fallback to default logo if no images are available
-    }
-    const randomIndex = Math.floor(Math.random() * bucketImages.length);
-    const bucketImage: BucketImage = bucketImages[randomIndex];
-    const imagePath = bucketImage.url ?? 'atom:' + bucketImage.localPath;
-    return imagePath;
-  };
-
-  const onNext = (): void => {
-    if (imageShownIndex >= imagesShown.length - 1) {
-      showNewRandomImage();
-      return;
-    }
-
-    const newIndex = imageShownIndex + 1;
-    setImageShownIndex(newIndex);
-    const nextImage = imagesShown[newIndex];
-    showImage(nextImage); // Show the next image;
-  };
-
-  const onPrevious = (): void => {
-    if (imageShownIndex <= 0) {
-      return;
-    }
-
-    const newIndex = imageShownIndex - 1;
-    setImageShownIndex(newIndex);
-    const previousImage = imagesShown[newIndex];
-    showImage(previousImage); // Show the previous image
-  };
+  // PLAYER CONTROLS
   const [showPlayerControls, setShowPlayerControls] = React.useState<boolean>(true);
 
   const onMouseMove = (): void => {
@@ -299,7 +204,7 @@ function App(): React.JSX.Element {
         type="button"
         className="absolute top-2 left-2 z-10 flex h-10 w-10 cursor-pointer items-center justify-center rounded-md bg-gray-800 text-gray-200 opacity-40 shadow duration-300 ease-in-out hover:bg-gray-700 hover:opacity-100"
         onClick={onToggleConfigurationPanel}
-        title={`${isFullscreen ? 'Exit Fullscreen' : 'Go Fullscreen'}`}
+        title={`${isConfigurationPanelOpen ? 'Close sidebar' : 'Open sidebar'}`}
       >
         <GearFill className="h-5 w-5" />
       </button>
@@ -325,7 +230,7 @@ function App(): React.JSX.Element {
       <button
         type="button"
         className="transtion absolute top-2 right-2 z-10 flex h-10 w-10 cursor-pointer items-center justify-center rounded-md bg-gray-800 text-gray-200 opacity-40 shadow duration-300 ease-in-out hover:bg-gray-700 hover:opacity-100"
-        onClick={onIpcFullscreen}
+        onClick={onToggleFullscreen}
         title={`${isFullscreen ? 'Exit Fullscreen' : 'Go Fullscreen'}`}
       >
         {isFullscreen ? (
@@ -365,7 +270,7 @@ function App(): React.JSX.Element {
               In the userConfiguration panel select a folder or bucket with images to pick from
               there a random one.
             </span>
-          ) : imagePaths.length === 0 && bucketImages.length === 0 ? (
+          ) : images.length === 0 ? (
             <span>
               The {userConfiguration.folderSelected ? 'folder' : 'bucket'} selected doesn&apos;t
               contain any image
@@ -399,23 +304,15 @@ function App(): React.JSX.Element {
                 </p>
               </div>
 
-              {userConfiguration.folderSelected && (
+              {(userConfiguration.folderSelected || userConfiguration.bucketSelected) && (
                 <div className="flex flex-col items-center justify-center gap-1">
                   <div className="flex items-center justify-center gap-2 border-b border-dotted border-gray-600 pb-1">
                     <Folder />
-                    <span>{userConfiguration.folderSelected}</span>
+                    <span>
+                      {userConfiguration.folderSelected ?? userConfiguration.bucketSelected?.name}
+                    </span>
                   </div>
-                  <span className="font-bold">{imagePaths.length} photos</span>
-                </div>
-              )}
-
-              {userConfiguration.bucketSelected && (
-                <div className="flex flex-col items-center justify-center gap-1">
-                  <div className="flex items-center justify-center gap-2 border-b border-dotted border-gray-600 pb-1">
-                    <Bucket />
-                    <span>{userConfiguration.bucketSelected.name}</span>
-                  </div>
-                  <span className="font-bold">{bucketImages.length} photos</span>
+                  <span className="font-bold">{images.length} photos</span>
                 </div>
               )}
             </div>

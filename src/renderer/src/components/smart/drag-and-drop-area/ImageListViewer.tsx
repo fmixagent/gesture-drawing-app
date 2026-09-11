@@ -1,10 +1,10 @@
+import { ImageData } from '@renderer/models/imageData';
 import React from 'react';
 import { FileImage, Trash2Fill } from 'react-bootstrap-icons';
-import { BucketImage } from '@renderer/models/bucket';
 
 interface DragAndDropAreaProps {
-  images: BucketImage[];
-  onRemoveImage?: (imageFile: BucketImage) => void;
+  images: ImageData[];
+  onRemoveImage?: (imageFile: ImageData) => void;
 }
 
 const ImageListViewer: React.FC<DragAndDropAreaProps> = ({ images = [], onRemoveImage }) => {

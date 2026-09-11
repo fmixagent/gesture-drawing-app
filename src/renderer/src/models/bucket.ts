@@ -1,14 +1,9 @@
 import { capitalizeFirstLetter } from '@renderer/helpers/utils';
-
-export class BucketImage {
-  name: string = '';
-  url?: string;
-  localPath?: string;
-}
+import { ImageData } from './imageData';
 export class Bucket {
   id!: string;
   name: string = '';
-  images: BucketImage[] = []; // url list
+  images: ImageData[] = []; // url list
   isRemovable?: boolean = true;
   isEditable?: boolean = true;
 }
