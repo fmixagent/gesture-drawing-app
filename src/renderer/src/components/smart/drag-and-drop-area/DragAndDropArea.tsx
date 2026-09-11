@@ -2,6 +2,7 @@ import React, { useState, useCallback, useEffect } from 'react';
 import { Upload } from 'react-bootstrap-icons';
 import ImageListViewer from './ImageListViewer';
 import { ImageData } from '@renderer/models/imageData';
+import droppedFileService from '@renderer/service/dropped-file-service';
 
 // --- Typings & Constants ---
 enum DropStatusEnum {
@@ -15,6 +16,38 @@ interface DragAndDropAreaProps {
   initialImages?: ImageData[];
   onChange?: (images: ImageData[]) => void;
 }
+
+// Electron (Chromium) exposes a dragged web image's URL via the non-standard
+// 'url' format. Plain browsers never populate it, only the standard
+// 'text/uri-list' format or an <img> tag inside 'text/html'.
+const extractDroppedImageUrl = (dataTransfer: DataTransfer): string | null => {
+  const electronUrl = dataTransfer.getData('url');
+  console.log('//electronUrl: ', electronUrl);
+  if (electronUrl) return electronUrl;
+
+  const uriList = dataTransfer.getData('text/uri-list');
+  console.log('//uriList: ', uriList);
+  if (uriList) {
+    const firstUrl = uriList
+      .split('\n')
+      .map((line) => line.trim())
+      .find((line) => line && !line.startsWith('#'));
+    if (firstUrl) return firstUrl;
+  }
+
+  const html = dataTransfer.getData('text/html');
+  console.log('//HTML: ', html);
+  const match = html.match(/<img[^>]+src=["']([^"']+)["']/i);
+  return match ? match[1] : null;
+};
+
+const getFileNameFromUrl = (url: string): string => {
+  try {
+    return new URL(url).pathname.split('/').pop() || url;
+  } catch {
+    return url;
+  }
+};
 
 const DragAndDropArea: React.FC<DragAndDropAreaProps> = ({ initialImages = [], onChange }) => {
   const [images, setImages] = useState<ImageData[]>(initialImages);
@@ -47,26 +80,22 @@ const DragAndDropArea: React.FC<DragAndDropAreaProps> = ({ initialImages = [], o
 
       // Simulate accepting dropped files (e.dataTransfer.files)
       const files: FileList | null = e.dataTransfer.files;
-      const imageUrl = e.dataTransfer.getData('url');
-
-      if (!files || files.length === 0) return;
-
-      const droppedFile = files[0];
+      const imageUrl = extractDroppedImageUrl(e.dataTransfer);
+      console.log('//TEST imageUrl:  ', imageUrl);
 
       let droppedImage: ImageData;
       if (imageUrl) {
-        // File dropped from browser
+        // Image dropped from a browser page. Electron also provides a
+        // synthetic File here, but plain browsers (web build) do not.
         droppedImage = {
-          name: droppedFile.name,
+          name: files?.[0]?.name || getFileNameFromUrl(imageUrl),
           url: imageUrl,
         };
-      } else {
+      } else if (files && files.length > 0) {
         // File from system
-        const filePath = window.api.getPathForFile(droppedFile);
-        droppedImage = {
-          name: droppedFile.name,
-          localPath: filePath,
-        };
+        droppedImage = droppedFileService.getImageDataFromFile(files[0]);
+      } else {
+        return;
       }
 
       // Check if already exists in the list
@@ -92,15 +121,9 @@ const DragAndDropArea: React.FC<DragAndDropAreaProps> = ({ initialImages = [], o
 
     const newImages: ImageData[] = [];
     for (const file of files) {
-      const imageName = file.name;
-      const filePath = window.api.getPathForFile(file);
       const imageAlreadyExists = checkIfImageAlreadyExists(file.name);
       if (!imageAlreadyExists) {
-        const newImage = {
-          name: imageName,
-          localPath: filePath,
-        };
-        newImages.push(newImage);
+        newImages.push(droppedFileService.getImageDataFromFile(file));
       }
     }
     setImages([...images, ...newImages]);

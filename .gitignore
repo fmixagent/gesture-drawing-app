@@ -1,6 +1,10 @@
 node_modules
 dist
+distPWA
 out
 .DS_Store
 .eslintcache
 *.log*
+.env
+.env.*
+!.env.example
