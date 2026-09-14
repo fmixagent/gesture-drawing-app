@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback } from 'react';
 import { Upload } from 'react-bootstrap-icons';
 import ImageListViewer from './ImageListViewer';
 import { ImageData } from '@renderer/models/imageData';
@@ -53,10 +53,6 @@ const DragAndDropArea: React.FC<DragAndDropAreaProps> = ({ initialImages = [], o
   const [images, setImages] = useState<ImageData[]>(initialImages);
   const [dropStatus, setDropStatus] = useState<DropStatus>(DropStatusEnum.DEFAULT);
 
-  useEffect(() => {
-    onChange?.(images);
-  }, [images]);
-
   // --- Handlers ---
   const handleDragEnter = useCallback((e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
@@ -98,35 +94,42 @@ const DragAndDropArea: React.FC<DragAndDropAreaProps> = ({ initialImages = [], o
         return;
       }
 
-      // Check if already exists in the list
-      if (checkIfImageAlreadyExists(droppedImage.name)) return;
+      // Check if already exists in the
+      const imageNameExists = images.find((anImage) => anImage.name === droppedImage.name)
+        ? true
+        : false;
+      if (imageNameExists) return;
 
       // Add image
-      setImages([...images, droppedImage]);
+      const updatedImages = [...images, droppedImage];
+      setImages(updatedImages);
+      onChange?.(updatedImages);
     },
-    [images]
+    [images, onChange]
   );
 
-  const checkIfImageAlreadyExists = (imageName: string): boolean => {
-    return images.find((anImage) => anImage.name === imageName) ? true : false;
+  const handleRemoveImage = (image: ImageData): void => {
+    const updatedImages = images.filter((anImage) => anImage.name !== image.name);
+    setImages(updatedImages);
+    onChange?.(updatedImages);
   };
 
-  const handleRemoveImage = (image: ImageData) => {
-    setImages(images.filter((anImage) => anImage.name !== image.name));
-  };
-
-  const onChangeBrowse = (ev: React.ChangeEvent<HTMLInputElement>) => {
+  const onChangeBrowse = (ev: React.ChangeEvent<HTMLInputElement>): void => {
     const files: File[] = Array.from(ev.target.files!);
     if (files.length === 0) return;
 
     const newImages: ImageData[] = [];
     for (const file of files) {
-      const imageAlreadyExists = checkIfImageAlreadyExists(file.name);
+      const imageAlreadyExists = images.find((anImage) => anImage.name === file.name)
+        ? true
+        : false;
       if (!imageAlreadyExists) {
         newImages.push(droppedFileService.getImageDataFromFile(file));
       }
     }
-    setImages([...images, ...newImages]);
+    const updatedImages = [...images, ...newImages];
+    setImages(updatedImages);
+    onChange?.(updatedImages);
   };
 
   return (
