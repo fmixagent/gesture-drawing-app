@@ -1,7 +1,8 @@
 import Button from '@renderer/components/ui/button/Button';
 import React, { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { Bucket, getBucketNameFromBucket } from '@renderer/models/bucket';
+import { Upload } from 'react-bootstrap-icons';
+import { Bucket, getBucketNameFromBucket, isValidBucketStructure } from '@renderer/models/bucket';
 import CreatableSelectField from '../creatable-select-field/creatable-select-field';
 import { useAppContext } from '@renderer/context-providers/app-context';
 import { UserConfiguration } from '@renderer/models/userConfiguration';
@@ -9,6 +10,7 @@ import ModalLayout from '@renderer/components/layout/modal/ModalLayout';
 import TextField from '../text-field/text-field';
 import DragAndDropArea from '../drag-and-drop-area/DragAndDropArea';
 import { capitalizeFirstLetter } from '@renderer/helpers/utils';
+import { ImageData } from '@renderer/models/imageData';
 
 interface BucketSelectionAndManagementProps {
   userConfiguration: UserConfiguration;
@@ -73,7 +75,7 @@ const BucketSelectionAndManagement: React.FC<BucketSelectionAndManagementProps> 
     }
   };
 
-  const onChangeEditingBucketProperty = (property: string, value: any): void => {
+  const onChangeEditingBucketProperty = (property: string, value: string | ImageData[]): void => {
     if (!editingBucket) return;
 
     const updatedSession = {
@@ -81,6 +83,45 @@ const BucketSelectionAndManagement: React.FC<BucketSelectionAndManagementProps> 
       [property]: value,
     };
     setEditingBucket(updatedSession);
+  };
+
+  const onDownloadBucket = (bucket: Bucket): void => {
+    const json = JSON.stringify(bucket, null, 2);
+    const blob = new Blob([json], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+
+    const anchor = document.createElement('a');
+    anchor.href = url;
+    anchor.download = `${bucket.name || 'bucket'}.json`;
+    document.body.appendChild(anchor);
+    anchor.click();
+    document.body.removeChild(anchor);
+
+    URL.revokeObjectURL(url);
+  };
+
+  const onImportBucket = (): void => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.json,application/json';
+    input.onchange = async (): Promise<void> => {
+      const file = input.files?.[0];
+      if (!file) return;
+
+      try {
+        const text = await file.text();
+        const parsed = JSON.parse(text);
+        if (isValidBucketStructure(parsed)) {
+          console.log('Imported JSON matches the Bucket structure', parsed);
+          setEditingBucket(parsed);
+        } else {
+          console.log('Imported JSON does not match the Bucket structure', parsed);
+        }
+      } catch (error) {
+        console.log('Imported file is not valid JSON', error);
+      }
+    };
+    input.click();
   };
 
   const onCloseEditingBucket = (): void => {
@@ -118,6 +159,7 @@ const BucketSelectionAndManagement: React.FC<BucketSelectionAndManagementProps> 
         onCreateNewOption={onCreateNewBucket}
         onOptionDelete={(option) => onDeleteBucket(option?.value as Bucket)}
         onOptionEdit={(option) => onEditBucket(option?.value as Bucket)}
+        onOptionDownload={(option) => onDownloadBucket(option?.value as Bucket)}
       />
       {userConfiguration.bucketSelected && (
         <div className="flex w-full items-center justify-start gap-2 truncate rounded-md border border-gray-300/20 px-3 py-2 text-gray-400">
@@ -125,6 +167,16 @@ const BucketSelectionAndManagement: React.FC<BucketSelectionAndManagementProps> 
           <i className="text-xs">({userConfiguration.bucketSelected.images.length} images)</i>
         </div>
       )}
+      <button
+        type="button"
+        className="flex w-full cursor-pointer items-center justify-center rounded-md border border-gray-300/20 bg-gray-900 p-2 text-gray-300 transition-all duration-200 ease-in-out hover:bg-gray-700 hover:text-gray-100"
+        onClick={onImportBucket}
+      >
+        <Upload className="h-5 w-5 text-gray-500 dark:text-gray-300" />
+        <p className="mb-1 pl-2 text-sm dark:text-gray-400">
+          <span className="font-semibold">Import bucket</span>
+        </p>
+      </button>
 
       {/* Bucket modal */}
       {editingBucket &&
@@ -148,7 +200,9 @@ const BucketSelectionAndManagement: React.FC<BucketSelectionAndManagementProps> 
                   <div className="flex w-full flex-1 overflow-hidden">
                     <DragAndDropArea
                       initialImages={editingBucket?.images ?? []}
-                      onChange={(value) => onChangeEditingBucketProperty('images', value)}
+                      onChange={(value) =>
+                        onChangeEditingBucketProperty('images', value as ImageData[])
+                      }
                     />
                   </div>
                 </section>

@@ -1,17 +1,37 @@
-import { useState } from 'react';
-import { PencilFill, TrashFill, XLg } from 'react-bootstrap-icons';
-import { ActionMeta, components, CSSObjectWithLabel, SingleValue } from 'react-select';
+import { JSX, useState } from 'react';
+import { Download, PencilFill, TrashFill, XLg } from 'react-bootstrap-icons';
+import {
+  ActionMeta,
+  ClearIndicatorProps,
+  components,
+  CSSObjectWithLabel,
+  GroupBase,
+  OptionProps,
+  Props as ReactSelectProps,
+  SingleValue,
+} from 'react-select';
 import CreatableSelect from 'react-select/creatable';
 
 interface BaseValue {
   isRemovable?: boolean;
+  isEditable?: boolean;
+  isDownloadable?: boolean;
 }
 export type SelectFieldOption<T extends BaseValue> = {
   label: string;
   value: T;
 };
 
-const CustomClearIndicator = (props: any) => {
+interface CustomSelectProps<T extends BaseValue>
+  extends ReactSelectProps<SelectFieldOption<T>, false, GroupBase<SelectFieldOption<T>>> {
+  onOptionDelete?: (value: SingleValue<SelectFieldOption<T>>) => void;
+  onOptionEdit?: (value: SingleValue<SelectFieldOption<T>>) => void;
+  onOptionDownload?: (value: SingleValue<SelectFieldOption<T>>) => void;
+}
+
+const CustomClearIndicator = <T extends BaseValue>(
+  props: ClearIndicatorProps<SelectFieldOption<T>, false, GroupBase<SelectFieldOption<T>>>
+): JSX.Element => {
   return (
     <components.ClearIndicator {...props}>
       <XLg className="cursor-pointer" />
@@ -19,20 +39,31 @@ const CustomClearIndicator = (props: any) => {
   );
 };
 
-const OptionWithDelete = (props: any) => {
+const OptionWithDelete = <T extends BaseValue>(
+  props: OptionProps<SelectFieldOption<T>, false, GroupBase<SelectFieldOption<T>>> & {
+    selectProps: CustomSelectProps<T>;
+  }
+): JSX.Element => {
   const isRemovable = props.data.value.isRemovable ?? false;
   const isEditable = props.data.value.isEditable ?? false;
+  const isDownloadable = props.data.value.isDownloadable ?? false;
 
-  const handleDeleteClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+  const handleDeleteClick = (e: React.MouseEvent<HTMLButtonElement>): void => {
     e.preventDefault();
     e.stopPropagation();
     props.selectProps.onOptionDelete?.(props.data);
   };
 
-  const handleEditClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+  const handleEditClick = (e: React.MouseEvent<HTMLButtonElement>): void => {
     e.preventDefault();
     e.stopPropagation();
     props.selectProps.onOptionEdit?.(props.data);
+  };
+
+  const handleDownloadClick = (e: React.MouseEvent<HTMLButtonElement>): void => {
+    e.preventDefault();
+    e.stopPropagation();
+    props.selectProps.onOptionDownload?.(props.data);
   };
 
   return (
@@ -46,6 +77,15 @@ const OptionWithDelete = (props: any) => {
             className="cursor-pointer rounded text-gray-500/50 transition-all duration-200 ease-in-out hover:text-gray-500 focus:outline-none"
           >
             <PencilFill className="h-5 w-5" />
+          </button>
+        )}
+        {isDownloadable && (
+          <button
+            type="button"
+            onClick={handleDownloadClick}
+            className="cursor-pointer rounded text-gray-500/50 transition-all duration-200 ease-in-out hover:text-gray-500 focus:outline-none"
+          >
+            <Download className="h-5 w-5" />
           </button>
         )}
         {isRemovable && (
@@ -83,6 +123,7 @@ type SelectFieldProps<T extends BaseValue> = {
   noOptionsMessage?: string;
   onOptionDelete?: (value: SingleValue<SelectFieldOption<T>>) => void;
   onOptionEdit?: (value: SingleValue<SelectFieldOption<T>>) => void;
+  onOptionDownload?: (value: SingleValue<SelectFieldOption<T>>) => void;
   onCreateNewOption?: (optionName: string) => void;
   autoUppercaseOnInput?: boolean;
   createNewOptionLabel?: string;
@@ -106,17 +147,18 @@ export const CreatableSelectField = <T extends BaseValue>({
   noOptionsMessage = 'No options',
   onOptionDelete,
   onOptionEdit,
+  onOptionDownload,
   onCreateNewOption,
   autoUppercaseOnInput = false,
   createNewOptionLabel = 'Create new option',
-}: SelectFieldProps<T>) => {
-  const onCreateOption = (inputValue: string) => {
+}: SelectFieldProps<T>): JSX.Element => {
+  const onCreateOption = (inputValue: string): void => {
     if (!inputValue) return;
     onCreateNewOption?.(inputValue);
   };
 
   const [inputValue, setInputValue] = useState('');
-  const handleInputChange = (newValue: string) => {
+  const handleInputChange = (newValue: string): void => {
     setInputValue(autoUppercaseOnInput ? newValue.toUpperCase() : newValue);
   };
 
@@ -148,7 +190,7 @@ export const CreatableSelectField = <T extends BaseValue>({
           inputId={id ?? `${label}_select`}
           className="h-full w-full rounded-md border border-solid text-sm"
           styles={{
-            control: (baseStyles, _state) =>
+            control: (baseStyles) =>
               ({
                 ...baseStyles,
                 background: selectedOption || inputValue ? '#d1d5dc' : '#1e2939',
@@ -167,14 +209,14 @@ export const CreatableSelectField = <T extends BaseValue>({
           isMulti={false}
           isClearable={isClearable}
           components={{
-            ClearIndicator: CustomClearIndicator,
-            Option: OptionWithDelete,
+            ClearIndicator: CustomClearIndicator<T>,
+            Option: OptionWithDelete<T>,
           }}
           tabIndex={1}
           placeholder={placeholder}
           isDisabled={isDisabled}
           noOptionsMessage={() => noOptionsMessage}
-          {...{ onOptionDelete, onOptionEdit }}
+          {...{ onOptionDelete, onOptionEdit, onOptionDownload }}
           onCreateOption={onCreateOption}
           formatCreateLabel={(inputValue) => `${createNewOptionLabel}: "${inputValue}"`}
         />
