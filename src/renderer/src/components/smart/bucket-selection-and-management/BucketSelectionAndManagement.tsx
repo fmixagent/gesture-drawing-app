@@ -1,7 +1,8 @@
 import Button from '@renderer/components/ui/button/Button';
 import React, { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { Bucket, getBucketNameFromBucket } from '@renderer/models/bucket';
+import { Upload } from 'react-bootstrap-icons';
+import { Bucket, getBucketNameFromBucket, isValidBucketStructure } from '@renderer/models/bucket';
 import CreatableSelectField from '../creatable-select-field/creatable-select-field';
 import { useAppContext } from '@renderer/context-providers/app-context';
 import { UserConfiguration } from '@renderer/models/userConfiguration';
@@ -99,6 +100,30 @@ const BucketSelectionAndManagement: React.FC<BucketSelectionAndManagementProps> 
     URL.revokeObjectURL(url);
   };
 
+  const onImportBucket = (): void => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.json,application/json';
+    input.onchange = async (): Promise<void> => {
+      const file = input.files?.[0];
+      if (!file) return;
+
+      try {
+        const text = await file.text();
+        const parsed = JSON.parse(text);
+        if (isValidBucketStructure(parsed)) {
+          console.log('Imported JSON matches the Bucket structure', parsed);
+          setEditingBucket(parsed);
+        } else {
+          console.log('Imported JSON does not match the Bucket structure', parsed);
+        }
+      } catch (error) {
+        console.log('Imported file is not valid JSON', error);
+      }
+    };
+    input.click();
+  };
+
   const onCloseEditingBucket = (): void => {
     // TODO: confirm modal?
     setEditingBucket(null);
@@ -142,6 +167,16 @@ const BucketSelectionAndManagement: React.FC<BucketSelectionAndManagementProps> 
           <i className="text-xs">({userConfiguration.bucketSelected.images.length} images)</i>
         </div>
       )}
+      <button
+        type="button"
+        className="flex w-full cursor-pointer items-center justify-center rounded-md border border-gray-300/20 bg-gray-900 p-2 text-gray-300 transition-all duration-200 ease-in-out hover:bg-gray-700 hover:text-gray-100"
+        onClick={onImportBucket}
+      >
+        <Upload className="h-5 w-5 text-gray-500 dark:text-gray-300" />
+        <p className="mb-1 pl-2 text-sm dark:text-gray-400">
+          <span className="font-semibold">Import bucket</span>
+        </p>
+      </button>
 
       {/* Bucket modal */}
       {editingBucket &&
