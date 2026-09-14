@@ -1,5 +1,5 @@
 import { JSX, useState } from 'react';
-import { PencilFill, TrashFill, XLg } from 'react-bootstrap-icons';
+import { Download, PencilFill, TrashFill, XLg } from 'react-bootstrap-icons';
 import {
   ActionMeta,
   ClearIndicatorProps,
@@ -15,6 +15,7 @@ import CreatableSelect from 'react-select/creatable';
 interface BaseValue {
   isRemovable?: boolean;
   isEditable?: boolean;
+  isDownloadable?: boolean;
 }
 export type SelectFieldOption<T extends BaseValue> = {
   label: string;
@@ -25,6 +26,7 @@ interface CustomSelectProps<T extends BaseValue>
   extends ReactSelectProps<SelectFieldOption<T>, false, GroupBase<SelectFieldOption<T>>> {
   onOptionDelete?: (value: SingleValue<SelectFieldOption<T>>) => void;
   onOptionEdit?: (value: SingleValue<SelectFieldOption<T>>) => void;
+  onOptionDownload?: (value: SingleValue<SelectFieldOption<T>>) => void;
 }
 
 const CustomClearIndicator = <T extends BaseValue>(
@@ -44,6 +46,7 @@ const OptionWithDelete = <T extends BaseValue>(
 ): JSX.Element => {
   const isRemovable = props.data.value.isRemovable ?? false;
   const isEditable = props.data.value.isEditable ?? false;
+  const isDownloadable = props.data.value.isDownloadable ?? false;
 
   const handleDeleteClick = (e: React.MouseEvent<HTMLButtonElement>): void => {
     e.preventDefault();
@@ -57,6 +60,12 @@ const OptionWithDelete = <T extends BaseValue>(
     props.selectProps.onOptionEdit?.(props.data);
   };
 
+  const handleDownloadClick = (e: React.MouseEvent<HTMLButtonElement>): void => {
+    e.preventDefault();
+    e.stopPropagation();
+    props.selectProps.onOptionDownload?.(props.data);
+  };
+
   return (
     <components.Option {...props}>
       <div className="m-0 flex items-center justify-between gap-2 p-0">
@@ -68,6 +77,15 @@ const OptionWithDelete = <T extends BaseValue>(
             className="cursor-pointer rounded text-gray-500/50 transition-all duration-200 ease-in-out hover:text-gray-500 focus:outline-none"
           >
             <PencilFill className="h-5 w-5" />
+          </button>
+        )}
+        {isDownloadable && (
+          <button
+            type="button"
+            onClick={handleDownloadClick}
+            className="cursor-pointer rounded text-gray-500/50 transition-all duration-200 ease-in-out hover:text-gray-500 focus:outline-none"
+          >
+            <Download className="h-5 w-5" />
           </button>
         )}
         {isRemovable && (
@@ -105,6 +123,7 @@ type SelectFieldProps<T extends BaseValue> = {
   noOptionsMessage?: string;
   onOptionDelete?: (value: SingleValue<SelectFieldOption<T>>) => void;
   onOptionEdit?: (value: SingleValue<SelectFieldOption<T>>) => void;
+  onOptionDownload?: (value: SingleValue<SelectFieldOption<T>>) => void;
   onCreateNewOption?: (optionName: string) => void;
   autoUppercaseOnInput?: boolean;
   createNewOptionLabel?: string;
@@ -128,6 +147,7 @@ export const CreatableSelectField = <T extends BaseValue>({
   noOptionsMessage = 'No options',
   onOptionDelete,
   onOptionEdit,
+  onOptionDownload,
   onCreateNewOption,
   autoUppercaseOnInput = false,
   createNewOptionLabel = 'Create new option',
@@ -196,7 +216,7 @@ export const CreatableSelectField = <T extends BaseValue>({
           placeholder={placeholder}
           isDisabled={isDisabled}
           noOptionsMessage={() => noOptionsMessage}
-          {...{ onOptionDelete, onOptionEdit }}
+          {...{ onOptionDelete, onOptionEdit, onOptionDownload }}
           onCreateOption={onCreateOption}
           formatCreateLabel={(inputValue) => `${createNewOptionLabel}: "${inputValue}"`}
         />

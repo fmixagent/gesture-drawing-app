@@ -84,6 +84,21 @@ const BucketSelectionAndManagement: React.FC<BucketSelectionAndManagementProps> 
     setEditingBucket(updatedSession);
   };
 
+  const onDownloadBucket = (bucket: Bucket): void => {
+    const json = JSON.stringify(bucket, null, 2);
+    const blob = new Blob([json], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+
+    const anchor = document.createElement('a');
+    anchor.href = url;
+    anchor.download = `${bucket.name || 'bucket'}.json`;
+    document.body.appendChild(anchor);
+    anchor.click();
+    document.body.removeChild(anchor);
+
+    URL.revokeObjectURL(url);
+  };
+
   const onCloseEditingBucket = (): void => {
     // TODO: confirm modal?
     setEditingBucket(null);
@@ -119,6 +134,7 @@ const BucketSelectionAndManagement: React.FC<BucketSelectionAndManagementProps> 
         onCreateNewOption={onCreateNewBucket}
         onOptionDelete={(option) => onDeleteBucket(option?.value as Bucket)}
         onOptionEdit={(option) => onEditBucket(option?.value as Bucket)}
+        onOptionDownload={(option) => onDownloadBucket(option?.value as Bucket)}
       />
       {userConfiguration.bucketSelected && (
         <div className="flex w-full items-center justify-start gap-2 truncate rounded-md border border-gray-300/20 px-3 py-2 text-gray-400">

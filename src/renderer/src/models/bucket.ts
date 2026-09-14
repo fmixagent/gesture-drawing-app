@@ -6,6 +6,7 @@ export class Bucket {
   images: ImageData[] = []; // url list
   isRemovable?: boolean = true;
   isEditable?: boolean = true;
+  isDownloadable?: boolean = true;
 }
 
 export const PRELOADED_BUCKET: Bucket[] = [
@@ -15,6 +16,7 @@ export const PRELOADED_BUCKET: Bucket[] = [
     images: [],
     isRemovable: false,
     isEditable: false,
+    isDownloadable: false,
   },
 ];
 
