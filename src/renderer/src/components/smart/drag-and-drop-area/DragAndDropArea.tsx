@@ -55,7 +55,7 @@ const DragAndDropArea: React.FC<DragAndDropAreaProps> = ({ initialImages = [], o
 
   useEffect(() => {
     onChange?.(images);
-  }, [images]);
+  }, [images, onChange]);
 
   // --- Handlers ---
   const handleDragEnter = useCallback((e: React.DragEvent<HTMLDivElement>) => {
@@ -111,11 +111,11 @@ const DragAndDropArea: React.FC<DragAndDropAreaProps> = ({ initialImages = [], o
     return images.find((anImage) => anImage.name === imageName) ? true : false;
   };
 
-  const handleRemoveImage = (image: ImageData) => {
+  const handleRemoveImage = (image: ImageData): void => {
     setImages(images.filter((anImage) => anImage.name !== image.name));
   };
 
-  const onChangeBrowse = (ev: React.ChangeEvent<HTMLInputElement>) => {
+  const onChangeBrowse = (ev: React.ChangeEvent<HTMLInputElement>): void => {
     const files: File[] = Array.from(ev.target.files!);
     if (files.length === 0) return;
 

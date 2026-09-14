@@ -9,6 +9,7 @@ import ModalLayout from '@renderer/components/layout/modal/ModalLayout';
 import TextField from '../text-field/text-field';
 import DragAndDropArea from '../drag-and-drop-area/DragAndDropArea';
 import { capitalizeFirstLetter } from '@renderer/helpers/utils';
+import { ImageData } from '@renderer/models/imageData';
 
 interface BucketSelectionAndManagementProps {
   userConfiguration: UserConfiguration;
@@ -73,7 +74,7 @@ const BucketSelectionAndManagement: React.FC<BucketSelectionAndManagementProps> 
     }
   };
 
-  const onChangeEditingBucketProperty = (property: string, value: any): void => {
+  const onChangeEditingBucketProperty = (property: string, value: string | ImageData[]): void => {
     if (!editingBucket) return;
 
     const updatedSession = {
@@ -148,7 +149,9 @@ const BucketSelectionAndManagement: React.FC<BucketSelectionAndManagementProps> 
                   <div className="flex w-full flex-1 overflow-hidden">
                     <DragAndDropArea
                       initialImages={editingBucket?.images ?? []}
-                      onChange={(value) => onChangeEditingBucketProperty('images', value)}
+                      onChange={(value) =>
+                        onChangeEditingBucketProperty('images', value as ImageData[])
+                      }
                     />
                   </div>
                 </section>
