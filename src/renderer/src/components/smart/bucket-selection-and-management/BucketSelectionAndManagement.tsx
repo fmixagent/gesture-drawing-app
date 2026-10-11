@@ -66,10 +66,10 @@ const BucketSelectionAndManagement: React.FC<BucketSelectionAndManagementProps> 
     deleteBucket(bucket);
     setEditingBucket(null);
 
-    if (userConfiguration.bucketSelected?.name === bucket.name) {
+    if (userConfiguration.bucketSelected?.id === bucket.id) {
       const newConfiguration: UserConfiguration = {
         ...userConfiguration,
-        folderSelected: undefined,
+        bucketSelected: undefined,
       };
       onChange?.(newConfiguration);
     }
@@ -86,7 +86,17 @@ const BucketSelectionAndManagement: React.FC<BucketSelectionAndManagementProps> 
   };
 
   const onDownloadBucket = (bucket: Bucket): void => {
-    const json = JSON.stringify(bucket, null, 2);
+    // Images dropped on Android only live in this device's storage (no URL), so they
+    // are left out to keep the exported JSON a simple list of URLs.
+    const exportableImages = bucket.images.filter((image) => !image.blobId);
+    const skippedImagesCount = bucket.images.length - exportableImages.length;
+    if (skippedImagesCount > 0) {
+      window.alert(
+        `${skippedImagesCount} image(s) dropped on Android are stored only on this device and won't be included in the exported bucket.`
+      );
+    }
+
+    const json = JSON.stringify({ ...bucket, images: exportableImages }, null, 2);
     const blob = new Blob([json], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
 

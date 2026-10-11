@@ -1,11 +1,33 @@
 import { ImageData } from '@renderer/models/imageData';
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { FileImage, Trash2Fill } from 'react-bootstrap-icons';
+import imageBlobStore from '@renderer/service/image-blob-store';
 
 interface DragAndDropAreaProps {
   images: ImageData[];
   onRemoveImage?: (imageFile: ImageData) => void;
 }
+
+// Shows an image stored in IndexedDB (dropped on Android) through a temporary object URL
+const StoredImage: React.FC<{ blobId: string; alt: string }> = ({ blobId, alt }) => {
+  const [src, setSrc] = useState<string>('');
+
+  useEffect(() => {
+    let objectUrl = '';
+    let cancelled = false;
+    imageBlobStore.getImage(blobId).then((blob) => {
+      if (!blob || cancelled) return;
+      objectUrl = URL.createObjectURL(blob);
+      setSrc(objectUrl);
+    });
+    return () => {
+      cancelled = true;
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
+    };
+  }, [blobId]);
+
+  return src ? <img src={src} alt={alt} className="h-full w-full object-contain" /> : null;
+};
 
 const ImageListViewer: React.FC<DragAndDropAreaProps> = ({ images = [], onRemoveImage }) => {
   return (
@@ -23,6 +45,7 @@ const ImageListViewer: React.FC<DragAndDropAreaProps> = ({ images = [], onRemove
                       className="h-full w-full object-contain"
                     />
                   ) : null}
+                  {image.blobId ? <StoredImage blobId={image.blobId} alt={image.name} /> : null}
                   {image.localPath ? (
                     <img
                       src={'atom:' + image.localPath}
