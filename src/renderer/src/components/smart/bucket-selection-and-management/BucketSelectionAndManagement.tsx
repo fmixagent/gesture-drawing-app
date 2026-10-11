@@ -66,10 +66,10 @@ const BucketSelectionAndManagement: React.FC<BucketSelectionAndManagementProps> 
     deleteBucket(bucket);
     setEditingBucket(null);
 
-    if (userConfiguration.bucketSelected?.name === bucket.name) {
+    if (userConfiguration.bucketSelected?.id === bucket.id) {
       const newConfiguration: UserConfiguration = {
         ...userConfiguration,
-        folderSelected: undefined,
+        bucketSelected: undefined,
       };
       onChange?.(newConfiguration);
     }

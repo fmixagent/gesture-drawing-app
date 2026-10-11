@@ -36,9 +36,22 @@ const useImagesShown = (userConfiguration: UserConfiguration): UseImagesShownPro
       return;
     }
 
+    // Object URLs created for images stored in IndexedDB, released on cleanup
+    let storedImageUrls: string[] = [];
+    let cancelled = false;
+
     const recoverBucketImages = async (images: ImageData[]): Promise<void> => {
       // Images dropped on Android are stored in IndexedDB and need an object URL to be shown
-      initImages(await imageBlobStore.resolveImageUrls(images));
+      const resolvedImages = await imageBlobStore.resolveImageUrls(images);
+      const createdUrls = resolvedImages
+        .filter((image) => image.blobId && image.url)
+        .map((image) => image.url as string);
+      if (cancelled) {
+        createdUrls.forEach((url) => URL.revokeObjectURL(url));
+        return;
+      }
+      storedImageUrls = createdUrls;
+      initImages(resolvedImages);
     };
 
     if (userConfiguration.bucketSelected) {
@@ -46,6 +59,8 @@ const useImagesShown = (userConfiguration: UserConfiguration): UseImagesShownPro
     }
 
     return () => {
+      cancelled = true;
+      storedImageUrls.forEach((url) => URL.revokeObjectURL(url));
       setImages([]);
       setNonRepeatedImages([]);
     };

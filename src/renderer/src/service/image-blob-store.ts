@@ -37,7 +37,12 @@ const runRequest = async <T>(
 const generateId = (): string =>
   crypto.randomUUID?.() ?? `${Date.now()}-${Math.random().toString(36).slice(2)}`;
 
-export const isAndroid = (): boolean => /android/i.test(navigator.userAgent);
+// Android tablets run Chrome in "desktop site" mode by default, which reports a desktop
+// Linux user agent, so a touch-capable Linux device is also treated as Android.
+export const isAndroid = (): boolean => {
+  const { userAgent, maxTouchPoints } = navigator;
+  return /android/i.test(userAgent) || (/linux/i.test(userAgent) && maxTouchPoints > 0);
+};
 
 const saveImage = async (file: Blob): Promise<string> => {
   const blobId = generateId();
