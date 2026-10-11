@@ -6,6 +6,7 @@ import {
   UserConfiguration,
 } from '@renderer/models/userConfiguration';
 import { StoreService } from './store-service.electron';
+import imageBlobStore from './image-blob-store';
 
 const USER_CONFIG_KEY = 'userConfig';
 const CUSTOM_TIME_STRETCH_KEY = 'customTimeStretch';
@@ -87,12 +88,24 @@ const getAllBuckets = async (): Promise<Bucket[]> => {
   return allBuckets;
 };
 
+// Deletes stored dropped images (Android) that no bucket references anymore
+const pruneDroppedImages = async (): Promise<void> => {
+  try {
+    const allBuckets = await getAllBuckets();
+    await imageBlobStore.pruneUnreferencedImages(allBuckets.flatMap((bucket) => bucket.images));
+  } catch (error) {
+    console.error('Could not prune dropped images', error);
+  }
+};
+
 const saveBucket = async (bucket: Bucket) => {
   localStorage.setItem(categoryKey(BUCKET_CATEGORY, bucket.id), JSON.stringify(bucket));
+  await pruneDroppedImages();
 };
 
 const deleteBucket = async (bucket: Bucket) => {
   localStorage.removeItem(categoryKey(BUCKET_CATEGORY, bucket.id));
+  await pruneDroppedImages();
 };
 
 const storeServiceWeb: StoreService = {
