@@ -1,6 +1,7 @@
 import { ImageData } from '@renderer/models/imageData';
 import { UserConfiguration } from '@renderer/models/userConfiguration';
 import fsService from '@renderer/service/fs-service';
+import imageBlobStore from '@renderer/service/image-blob-store';
 import { useCallback, useEffect, useState } from 'react';
 
 type UseImagesShownProps = {
@@ -35,9 +36,13 @@ const useImagesShown = (userConfiguration: UserConfiguration): UseImagesShownPro
       return;
     }
 
+    const recoverBucketImages = async (images: ImageData[]): Promise<void> => {
+      // Images dropped on Android are stored in IndexedDB and need an object URL to be shown
+      initImages(await imageBlobStore.resolveImageUrls(images));
+    };
+
     if (userConfiguration.bucketSelected) {
-      const images = userConfiguration.bucketSelected.images;
-      initImages(images);
+      recoverBucketImages(userConfiguration.bucketSelected.images);
     }
 
     return () => {

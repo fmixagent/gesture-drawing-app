@@ -3,6 +3,8 @@ import { Upload } from 'react-bootstrap-icons';
 import ImageListViewer from './ImageListViewer';
 import { ImageData } from '@renderer/models/imageData';
 import droppedFileService from '@renderer/service/dropped-file-service';
+import imageBlobStore, { isAndroid } from '@renderer/service/image-blob-store';
+import { environment } from '@renderer/environments/environment';
 
 // --- Typings & Constants ---
 enum DropStatusEnum {
@@ -20,6 +22,8 @@ interface DragAndDropAreaProps {
 // Electron (Chromium) exposes a dragged web image's URL via the non-standard
 // 'url' format. Plain browsers never populate it, only the standard
 // 'text/uri-list' format or an <img> tag inside 'text/html'.
+// Chrome on Android only provides the image as a File (no URL at all) when
+// dragging an image, but a dragged link arrives as 'text/plain'.
 const extractDroppedImageUrl = (dataTransfer: DataTransfer): string | null => {
   const electronUrl = dataTransfer.getData('url');
   console.log('//electronUrl: ', electronUrl);
@@ -38,7 +42,20 @@ const extractDroppedImageUrl = (dataTransfer: DataTransfer): string | null => {
   const html = dataTransfer.getData('text/html');
   console.log('//HTML: ', html);
   const match = html.match(/<img[^>]+src=["']([^"']+)["']/i);
-  return match ? match[1] : null;
+  if (match) return match[1];
+
+  const text = dataTransfer.getData('text/plain').trim();
+  return /^https?:\/\/\S+$/i.test(text) ? text : null;
+};
+
+// Android drops tend to share generic file names (e.g. 'image.png'), so the
+// stored id is appended to keep names unique within a bucket.
+const getUniqueFileName = (fileName: string, blobId: string): string => {
+  const extensionIndex = fileName.lastIndexOf('.');
+  const suffix = blobId.slice(0, 8);
+  return extensionIndex > 0
+    ? `${fileName.slice(0, extensionIndex)}-${suffix}${fileName.slice(extensionIndex)}`
+    : `${fileName}-${suffix}`;
 };
 
 const getFileNameFromUrl = (url: string): string => {
@@ -70,7 +87,7 @@ const DragAndDropArea: React.FC<DragAndDropAreaProps> = ({ initialImages = [], o
   }, []);
 
   const handleDrop = useCallback(
-    (e: React.DragEvent<HTMLDivElement>) => {
+    async (e: React.DragEvent<HTMLDivElement>) => {
       e.preventDefault();
       setDropStatus(DropStatusEnum.DEFAULT);
 
@@ -87,6 +104,11 @@ const DragAndDropArea: React.FC<DragAndDropAreaProps> = ({ initialImages = [], o
           name: files?.[0]?.name || getFileNameFromUrl(imageUrl),
           url: imageUrl,
         };
+      } else if (files && files.length > 0 && environment.webVersion && isAndroid()) {
+        // Image dropped on Android: no URL is available, so the image itself
+        // is stored in IndexedDB and only referenced from the bucket.
+        const blobId = await imageBlobStore.saveImage(files[0]);
+        droppedImage = { name: getUniqueFileName(files[0].name, blobId), blobId };
       } else if (files && files.length > 0) {
         // File from system
         droppedImage = droppedFileService.getImageDataFromFile(files[0]);
